@@ -129,11 +129,11 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
         variant="outline"
         onClick={handleOpen}
         className={cn(
-          "justify-between gap-2.5 w-full sm:w-[320px] bg-slate-50 border-slate-200 rounded-[10px] font-medium transition-all group",
+          "justify-between gap-2.5 w-full sm:w-[320px] bg-base-200/50 border-base-200 rounded-[10px] font-medium transition-all group",
           (isOpen || startMonth) && "ring-1 ring-primary/20 border-primary/30"
         )}
         leftIcon={
-          <span className={cn("transition-colors", startMonth ? "text-primary" : "text-slate-400 group-hover:text-primary/70")}>
+          <span className={cn("transition-colors", startMonth ? "text-primary" : "text-base-content/40 group-hover:text-primary/70")}>
             <Calendar size={16} />
           </span>
         }
@@ -141,37 +141,37 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
           startMonth && (
             <div 
               onClick={handleClear}
-              className="p-1 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 transition-colors z-10"
+              className="p-1 hover:bg-base-200 rounded-full text-base-content/40 hover:text-base-content/60 transition-colors z-10"
             >
               <X size={12} />
             </div>
           )
         }
       >
-        <span className={cn("truncate", startMonth ? "text-slate-900" : "text-slate-500 font-normal")}>
+        <span className={cn("truncate", startMonth ? "text-base-content" : "text-base-content/50 font-normal")}>
           {buttonText}
         </span>
       </Button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full sm:w-[320px] bg-white border border-slate-200 rounded-[14px] shadow-[0px_4px_24px_rgba(0,0,0,0.08)] z-50 overflow-hidden transform origin-top animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-full sm:w-[320px] bg-base-100 border border-base-200 rounded-[14px] shadow-lg z-50 overflow-hidden transform origin-top animate-in fade-in zoom-in-95 duration-200">
           
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center justify-between p-4 border-b border-base-200 bg-base-200/30">
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => setCurrentYear(y => y - 1)}
-              className="size-8 rounded-lg text-slate-500"
+              className="size-8 rounded-lg text-base-content/50"
             >
               <ChevronLeft size={14} />
             </Button>
-            <span className="text-sm font-bold text-slate-800">{currentYear}</span>
+            <span className="text-sm font-bold text-base-content">{currentYear}</span>
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => setCurrentYear(y => y + 1)}
-              className="size-8 rounded-lg text-slate-500"
+              className="size-8 rounded-lg text-base-content/50"
             >
               <ChevronRight size={14} />
             </Button>
@@ -191,7 +191,7 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
                     className={`
                       py-2 px-1 text-sm font-medium rounded-lg transition-all relative
                       ${isSelected ? 'bg-primary text-white shadow-sm' : 
-                        inRange ? 'bg-primary/10 text-primary' : 'bg-transparent text-slate-700 hover:bg-slate-100'}
+                        inRange ? 'bg-primary/10 text-primary' : 'bg-transparent text-base-content hover:bg-base-200'}
                     `}
                   >
                     {month}
@@ -206,8 +206,8 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-white">
-            <p className="text-xs text-slate-500 font-medium">
+          <div className="flex items-center justify-between p-4 border-t border-base-200 bg-base-100">
+            <p className="text-xs text-base-content/50 font-medium">
               {selectionStep === "start" ? "Select Start Month" : "Select End Month"}
             </p>
             <div className="flex items-center justify-end gap-2">
@@ -215,7 +215,7 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                className="font-bold text-slate-600 h-8"
+                className="font-bold text-base-content/60 h-8"
               >
                 Cancel
               </Button>

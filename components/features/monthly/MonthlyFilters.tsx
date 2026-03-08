@@ -5,7 +5,6 @@ import MonthCard from "@/components/features/monthly/MonthCard";
 import SkeletonCard from "@/components/ui/SkeletonCard";
 import MonthRangePicker from "@/components/features/monthly/MonthRangePicker";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 type MonthData = {
@@ -72,7 +71,7 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
   return (
     <>
       {/* Filter & Sort Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-slate-200/60 p-2 sm:pl-5 rounded-[16px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] w-full mb-2">
+      <div className="card bg-base-100 shadow-sm border border-base-200 flex-row flex-wrap items-center justify-between gap-4 p-2 sm:pl-5 w-full mb-2">
         <MonthRangePicker
           startMonth={startMonth}
           endMonth={endMonth}
@@ -82,17 +81,15 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
           }}
         />
 
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-[12px] w-full sm:w-auto overflow-x-auto">
+        <div className="join bg-base-200 rounded-xl p-1 w-full sm:w-auto overflow-x-auto">
           {(["date", "usage", "cost"] as const).map((type) => {
             const isActive = sortBy.startsWith(type);
             const isDesc = sortBy.endsWith("desc");
             const labels = { date: "Latest", usage: "Usage", cost: "Cost" };
 
             return (
-              <Button
+              <button
                 key={type}
-                variant={isActive ? "outline" : "ghost"}
-                size="md"
                 onClick={() => {
                   if (isActive) {
                     setSortBy(`${type}-${isDesc ? "asc" : "desc"}`);
@@ -101,21 +98,19 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
                   }
                 }}
                 className={cn(
-                  "px-4 font-bold rounded-lg transition-colors",
+                  "join-item btn btn-sm border-none font-bold px-5",
                   isActive
-                    ? "bg-white text-primary shadow-sm border-slate-200/50 hover:bg-white"
-                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-200"
+                    ? "bg-base-100 text-primary shadow-sm hover:bg-base-100"
+                    : "bg-transparent text-base-content/50 hover:text-base-content hover:bg-base-300/50"
                 )}
-                rightIcon={
-                  isActive && (
-                    <span className="text-primary flex items-center justify-center">
-                      {isDesc ? <ChevronDown size={10} /> : <ChevronUp size={10} />}
-                    </span>
-                  )
-                }
               >
                 {labels[type]}
-              </Button>
+                {isActive && (
+                  <span className="text-primary ml-0.5">
+                    {isDesc ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+                  </span>
+                )}
+              </button>
             );
           })}
         </div>
@@ -128,7 +123,7 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
             <MonthCard key={`${data.month}-${data.year}`} {...data} />
           ))
         ) : (
-          <div className="col-span-full py-12 flex flex-col items-center justify-center text-slate-400 bg-white border border-slate-200 border-dashed rounded-xl">
+          <div className="col-span-full py-12 flex flex-col items-center justify-center text-base-content/40 card bg-base-100 border border-base-200 border-dashed">
             <p className="text-base font-medium">No monthly records found</p>
             <p className="text-sm">Try adjusting your filter</p>
           </div>

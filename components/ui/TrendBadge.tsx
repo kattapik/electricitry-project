@@ -13,12 +13,12 @@ export default function TrendBadge({ text, trend, upIsGood = false }: TrendBadge
       ? null
       : (trend === "up" && upIsGood) || (trend === "down" && !upIsGood);
 
-  const colorClasses =
+  const badgeClass =
     isPositive === null
-      ? "bg-slate-100 text-slate-400"
+      ? "badge-ghost text-base-content/40"
       : isPositive
-      ? "bg-green-50 text-green-600"
-      : "bg-red-50 text-red-500";
+      ? "badge-success badge-soft"
+      : "badge-error badge-soft";
 
   const Icon =
     trend === "up"
@@ -28,7 +28,7 @@ export default function TrendBadge({ text, trend, upIsGood = false }: TrendBadge
       : Minus;
 
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold w-fit ${colorClasses}`}>
+    <span className={`badge gap-1.5 px-3 py-3 text-xs font-semibold ${badgeClass}`}>
       <Icon size={12} />
       {text}
     </span>

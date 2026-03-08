@@ -2,20 +2,49 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Calendar, Home, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Calendar, ChevronRight, Box, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/monthly", label: "Monthly Records", icon: Calendar },
-  { href: "/appliances", label: "Appliances", icon: Home },
+  {
+    href: "/",
+    label: "Dashboard",
+    description: "Overview & insights",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/monthly",
+    label: "Monthly Records",
+    description: "Historical breakdown",
+    icon: Calendar,
+  },
+  {
+    href: "/appliances",
+    label: "Appliances",
+    description: "Manage appliance reference",
+    icon: Cpu,
+  },
+
+  {
+    href: "/rooms",
+    label: "Rooms",
+    description: "Manage locations",
+    icon: Box, // Will use Box or something similar, need to import it
+  },
 ];
 
 export default function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1 px-4 flex-1">
+    <nav className="flex flex-col gap-1 px-3 flex-1 w-full">
+      {/* Section label */}
+      <div className="px-3 pt-2 pb-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-base-content/25">
+          Menu
+        </span>
+      </div>
+
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;
@@ -24,18 +53,48 @@ export default function SidebarNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3.5 px-4 h-11 rounded-xl font-bold text-sm transition-colors",
+              "group flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm relative",
               isActive
-                ? "bg-primary text-white shadow-lg shadow-primary/20"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-primary text-primary-content shadow-md shadow-primary/25"
+                : "text-base-content/60 hover:text-base-content hover:bg-base-200/70"
             )}
           >
-            <Icon
-              size={18}
-              className={cn(isActive ? "text-white" : "text-slate-400")}
-            />
-            <span className="flex-1 text-[14px]">{item.label}</span>
-            {isActive && <ChevronRight size={14} className="opacity-70" />}
+            {/* Icon with background */}
+            <div
+              className={cn(
+                "flex items-center justify-center size-8 rounded-lg shrink-0",
+                isActive
+                  ? "bg-white/20"
+                  : "bg-base-200/80 group-hover:bg-primary/10 group-hover:text-primary"
+              )}
+            >
+              <Icon size={16} />
+            </div>
+
+            {/* Text block */}
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-[13px] font-bold leading-tight">{item.label}</span>
+              <span
+                className={cn(
+                  "text-[10px] leading-tight mt-0.5",
+                  isActive ? "text-white/60" : "text-base-content/30 group-hover:text-base-content/40"
+                )}
+              >
+                {item.description}
+              </span>
+            </div>
+
+            {/* Right indicator */}
+            {isActive ? (
+              <ChevronRight size={14} className="opacity-60 shrink-0" />
+            ) : (
+              <div className="size-1.5 rounded-full bg-base-content/0 group-hover:bg-primary/40 shrink-0" />
+            )}
+
+            {/* Active left bar indicator */}
+            {isActive && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white/50 rounded-r-full" />
+            )}
           </Link>
         );
       })}

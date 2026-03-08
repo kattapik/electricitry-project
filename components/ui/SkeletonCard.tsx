@@ -1,24 +1,27 @@
 export default function SkeletonCard() {
   return (
-    <div className="bg-white/40 border border-slate-100 rounded-xl p-5 flex flex-col gap-4 animate-pulse">
-      {/* Header skeleton */}
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-2">
-          <div className="bg-slate-200 h-3 w-16 rounded" />
-          <div className="bg-slate-200 h-6 w-32 rounded" />
+    <div className="card bg-base-100 shadow-sm border border-base-200 animate-pulse">
+      <div className="card-body p-5 gap-4">
+        {/* Header skeleton */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-2">
+            <div className="skeleton h-4 w-20 rounded" />
+            <div className="skeleton h-6 w-32 rounded" />
+          </div>
+          <div className="skeleton rounded-full size-8" />
         </div>
-        <div className="bg-slate-100 rounded-full size-10" />
-      </div>
 
-      {/* Stats rows skeleton */}
-      <div className="flex flex-col gap-4">
-        <div className="bg-slate-100 h-12 rounded-lg" />
-        <div className="bg-slate-100 h-12 rounded-lg" />
-      </div>
+        {/* Stats rows skeleton */}
+        <div className="flex flex-col gap-2">
+          <div className="skeleton h-11 rounded-lg" />
+          <div className="skeleton h-11 rounded-lg" />
+        </div>
 
-      {/* Footer skeleton */}
-      <div className="border-t border-slate-50 pt-4">
-        <div className="bg-slate-100 h-3 w-40 rounded" />
+        {/* Footer skeleton */}
+        <div className="divider my-0"></div>
+        <div className="-mt-2">
+          <div className="skeleton h-3 w-40 rounded" />
+        </div>
       </div>
     </div>
   );

@@ -13,8 +13,8 @@ export default function DashboardPage() {
           actions={
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end hidden sm:flex">
-                <span className="text-sm font-medium text-slate-900">Monday, Oct 24</span>
-                <span className="text-xs text-slate-500 uppercase">Viewing Real-time Data</span>
+                <span className="text-sm font-medium text-base-content">Monday, Oct 24</span>
+                <span className="text-xs text-base-content/50 uppercase">Viewing Real-time Data</span>
               </div>
             </div>
           }
@@ -33,7 +33,7 @@ export default function DashboardPage() {
           <StatCard
             label="Total Monthly Cost"
             value="158.50"
-            prefix="$"
+            prefix="฿"
             badge={
               <TrendBadge text="2.1% lower than average" trend="down" upIsGood={false} />
             }
@@ -47,7 +47,7 @@ export default function DashboardPage() {
 
         {/* Top Energy Consumers */}
         <div className="mt-6 md:mt-8">
-          <h2 className="text-lg font-bold text-slate-900 mb-4 md:mb-5">Top Energy Consumers</h2>
+          <h2 className="text-lg font-bold text-base-content mb-4 md:mb-5">Top Energy Consumers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             <ConsumerCard
               name="Air Conditioner"

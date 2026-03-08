@@ -10,52 +10,54 @@ export default function EnergyChart() {
   const forecastPath = "M0,180 C60,175 120,155 180,135 C240,115 300,100 360,95 C420,90 480,85 540,70 C600,55 660,50 720,55 C780,60 810,65 830,70";
 
   return (
-    <div className="bg-white border border-white rounded-2xl shadow-[0px_4px_20px_-2px_rgba(19,109,236,0.08)] p-5 md:p-6 flex flex-col gap-6 w-full overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">Forecast vs. Actual</h3>
-          <p className="text-sm text-slate-500">Consumption trends for the last 6 months</p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
-          <div className="flex items-center gap-2">
-            <span className="size-3 rounded-full bg-primary" />
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Actual</span>
+    <div className="card bg-base-100 shadow-sm border border-base-200 w-full overflow-hidden">
+      <div className="card-body p-5 md:p-6 gap-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
+          <div>
+            <h3 className="text-lg font-bold text-base-content">Forecast vs. Actual</h3>
+            <p className="text-sm text-base-content/50">Consumption trends for the last 6 months</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="size-3 rounded-full bg-slate-300" />
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Forecast</span>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2">
+              <span className="badge badge-primary badge-xs rounded-full p-1.5" />
+              <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Actual</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="badge badge-ghost badge-xs rounded-full p-1.5" />
+              <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Forecast</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Chart */}
-      <div className="flex flex-col gap-4 w-full">
-        <svg viewBox="0 0 830 256" className="w-full h-auto" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#136dec" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#136dec" stopOpacity="0.02" />
-            </linearGradient>
-          </defs>
-          
-          {/* Actual fill area */}
-          <path d={actualFill} fill="url(#actualGradient)" />
-          
-          {/* Forecast dashed line */}
-          <path d={forecastPath} stroke="#cbd5e1" strokeWidth="2" strokeDasharray="8 4" fill="none" vectorEffect="non-scaling-stroke" />
-          
-          {/* Actual solid line */}
-          <path d={actualPath} stroke="#136dec" strokeWidth="2.5" fill="none" vectorEffect="non-scaling-stroke" />
-        </svg>
+        {/* Chart */}
+        <div className="flex flex-col gap-4 w-full">
+          <svg viewBox="0 0 830 256" className="w-full h-auto" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#136dec" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#136dec" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            
+            {/* Actual fill area */}
+            <path d={actualFill} fill="url(#actualGradient)" />
+            
+            {/* Forecast dashed line */}
+            <path d={forecastPath} stroke="#cbd5e1" strokeWidth="2" strokeDasharray="8 4" fill="none" vectorEffect="non-scaling-stroke" />
+            
+            {/* Actual solid line */}
+            <path d={actualPath} stroke="#136dec" strokeWidth="2.5" fill="none" vectorEffect="non-scaling-stroke" />
+          </svg>
 
-        {/* X-axis labels */}
-        <div className="flex items-center justify-between px-2">
-          {months.map((month) => (
-            <span key={month} className="text-xs font-bold text-slate-400 uppercase">
-              {month}
-            </span>
-          ))}
+          {/* X-axis labels */}
+          <div className="flex items-center justify-between px-2">
+            {months.map((month) => (
+              <span key={month} className="text-xs font-bold text-base-content/40 uppercase">
+                {month}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>

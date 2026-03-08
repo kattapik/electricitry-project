@@ -1,29 +1,49 @@
 @import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default;
+}
 
 @theme inline {
-  --color-background: #f6f7f8;
-  --color-foreground: #0f172a;
   --color-primary: #136dec;
   --color-primary-light: rgba(19, 109, 236, 0.1);
   --color-primary-subtle: rgba(19, 109, 236, 0.05);
-  --color-slate-900: #0f172a;
-  --color-slate-700: #334155;
-  --color-slate-600: #475569;
-  --color-slate-500: #64748b;
-  --color-slate-400: #94a3b8;
-  --color-slate-200: #e2e8f0;
-  --color-slate-100: #f1f5f9;
-  --color-slate-50: #f8fafc;
-  --color-red-500: #ef4444;
-  --color-red-50: #fef2f2;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
-  --color-green-50: #f0fdf4;
-  --color-green-100: #dcfce7;
   --font-sans: var(--font-inter);
 }
 
+/* Override DaisyUI light theme to match our brand */
+[data-theme="light"],
+:root {
+  --color-base-100: #ffffff;
+  --color-base-200: #f1f5f9;
+  --color-base-300: #e2e8f0;
+  --color-base-content: #0f172a;
+
+  /* Theme semantic colors for DaisyUI 5 */
+  --color-primary: #136dec;
+  --color-primary-content: #ffffff;
+
+  --color-secondary: #64748b;
+  --color-secondary-content: #ffffff;
+
+  --color-accent: #8b5cf6;
+  --color-accent-content: #ffffff;
+
+  --color-success: #22c55e;
+  --color-success-content: #ffffff;
+
+  --color-warning: #f59e0b;
+  --color-warning-content: #ffffff;
+
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+
+  /* Border radius */
+  --radius-selector: 1rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+}
+
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: #f6f7f8;
+  color: var(--color-base-content);
 }

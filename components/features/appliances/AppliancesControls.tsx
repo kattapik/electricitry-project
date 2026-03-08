@@ -44,7 +44,7 @@ export default function AppliancesControls() {
         onClose={() => setIsAddOpen(false)}
         title="Add New Appliance"
       >
-        <div className="flex flex-col gap-5 p-6 border-b border-slate-100">
+        <div className="flex flex-col gap-5 p-6 border-b border-base-200">
           <Input
             label="Appliance Name"
             type="text"
@@ -87,7 +87,7 @@ export default function AppliancesControls() {
           />
         </div>
 
-        <div className="bg-slate-50/50 p-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 rounded-b-xl">
+        <div className="bg-base-200/30 p-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-base-200 rounded-b-xl">
           <Button
             variant="ghost"
             onClick={() => setIsAddOpen(false)}

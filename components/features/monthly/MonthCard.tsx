@@ -1,6 +1,6 @@
-import { ChevronRight, Zap, DollarSign, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ChevronRight, Zap, Coins, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type MonthCardProps = {
   month: string;
@@ -21,71 +21,68 @@ export default function MonthCard({
   trendType,
   isLatest = false,
 }: MonthCardProps) {
-  const trendColor =
-    trendType === "positive"
-      ? "text-green-500"
-      : trendType === "negative"
-      ? "text-red-500"
-      : "text-slate-400";
+  const trendConfig = {
+    positive: { color: "text-success", icon: TrendingDown },
+    negative: { color: "text-error", icon: TrendingUp },
+    neutral: { color: "text-base-content/40", icon: Minus },
+  };
+
+  const { color: trendColor, icon: TrendIcon } = trendConfig[trendType];
 
   return (
-    <div className="bg-white border border-slate-100 rounded-xl shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-5 flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-1">
-          <span
-            className={`text-xs font-bold uppercase tracking-wider ${
-              isLatest ? "text-primary" : "text-slate-400"
-            }`}
+    <Link href={`/monthly/${month.toLowerCase()}`} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow block outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/30">
+      <div className="card-body p-5 gap-4">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <span
+              className={cn(
+                "badge badge-sm font-bold uppercase tracking-wider",
+                isLatest ? "badge-primary badge-soft" : "badge-ghost text-base-content/40"
+              )}
+            >
+              {isLatest ? "Latest Period" : "Historical"}
+            </span>
+            <h3 className="text-xl font-bold text-base-content mt-1">
+              {month} {year}
+            </h3>
+          </div>
+          <div
+            className={cn(
+              "btn btn-circle btn-sm",
+              isLatest ? "btn-primary btn-soft" : "btn-ghost text-base-content/30 pointer-events-none"
+            )}
+            aria-label={`View details for ${month}`}
           >
-            {isLatest ? "Latest Period" : "Historical"}
-          </span>
-          <h3 className="text-2xl font-bold text-slate-900">
-            {month} {year}
-          </h3>
-        </div>
-        <Button
-          variant={isLatest ? "primary" : "secondary"}
-          size="icon"
-          className={cn(
-            "size-10 rounded-full shrink-0",
-            isLatest ? "bg-primary-subtle text-primary shadow-none hover:bg-primary/20" : "text-slate-400"
-          )}
-          aria-label={`View details for ${month}`}
-        >
-          <ChevronRight size={16} />
-        </Button>
-      </div>
-
-      {/* Stats rows */}
-      <div className="flex flex-col gap-4">
-        <div className="bg-slate-50 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap size={14} className="text-slate-500" />
-            <span className="text-sm font-medium text-slate-600">Total Usage</span>
+            <ChevronRight size={16} />
           </div>
-          <span className="text-lg font-bold text-slate-900">{totalUsage}</span>
         </div>
-        <div className="bg-slate-50 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <DollarSign size={16} className="text-slate-500" />
-            <span className="text-sm font-medium text-slate-600">Monthly Cost</span>
-          </div>
-          <span className="text-lg font-bold text-primary">{monthlyCost}</span>
-        </div>
-      </div>
 
-      {/* Trend footer */}
-      <div className="border-t border-slate-50 pt-4 flex items-center gap-2">
-        {trendType === "negative" ? (
-          <TrendingUp size={12} className={trendColor} />
-        ) : trendType === "positive" ? (
-          <TrendingDown size={12} className={trendColor} />
-        ) : (
-          <Minus size={12} className={trendColor} />
-        )}
-        <span className={`text-xs font-medium ${trendColor}`}>{trendText}</span>
+        {/* Stats */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between bg-base-200/50 rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-2 text-base-content/60">
+              <Zap size={14} />
+              <span className="text-sm font-medium">Total Usage</span>
+            </div>
+            <span className="text-base font-bold text-base-content">{totalUsage}</span>
+          </div>
+          <div className="flex items-center justify-between bg-base-200/50 rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-2 text-base-content/60">
+              <Coins size={14} />
+              <span className="text-sm font-medium">Monthly Cost</span>
+            </div>
+            <span className="text-base font-bold text-primary">{monthlyCost}</span>
+          </div>
+        </div>
+
+        {/* Trend footer */}
+        <div className="divider my-0"></div>
+        <div className={cn("flex items-center gap-1.5 -mt-2", trendColor)}>
+          <TrendIcon size={12} />
+          <span className="text-xs font-medium">{trendText}</span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }

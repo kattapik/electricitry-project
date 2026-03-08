@@ -16,13 +16,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="text-sm font-semibold text-slate-700">
+          <label htmlFor={inputId} className="text-sm font-semibold text-base-content/70">
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -30,17 +30,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              "w-full bg-slate-50 border rounded-lg px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors",
+              "input input-bordered w-full bg-base-200/50 px-4 py-3 text-sm text-base-content placeholder:text-base-content/35",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/30",
-              error ? "border-red-300 focus-visible:ring-red-200" : "border-slate-200",
+              error && "input-error focus-visible:ring-error/20",
               leftIcon && "pl-10",
               className
             )}
             {...props}
           />
         </div>
-        {hint && !error && <p className="text-xs text-slate-400">{hint}</p>}
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {hint && !error && <p className="text-xs text-base-content/40">{hint}</p>}
+        {error && <p className="text-xs text-error">{error}</p>}
       </div>
     );
   }

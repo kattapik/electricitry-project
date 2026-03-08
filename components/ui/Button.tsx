@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -11,18 +10,18 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variants = {
-  primary: "bg-primary text-white hover:bg-primary/90 active:brightness-95",
-  secondary: "bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300",
-  outline: "bg-transparent border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300",
-  ghost: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-  danger: "bg-red-500 text-white hover:bg-red-600 active:brightness-95",
+  primary: "btn-primary text-white",
+  secondary: "btn-secondary",
+  outline: "btn-outline",
+  ghost: "btn-ghost",
+  danger: "btn-error text-white",
 };
 
 const sizes = {
-  sm: "h-8 px-3 text-xs rounded-lg gap-1.5",
-  md: "h-10 px-4 py-2 text-sm rounded-lg gap-2",
-  lg: "h-12 px-6 text-base rounded-xl gap-2.5",
-  icon: "size-10 flex items-center justify-center rounded-lg p-0",
+  sm: "btn-sm text-xs rounded-lg",
+  md: "btn-md rounded-lg",
+  lg: "btn-lg rounded-xl",
+  icon: "btn-md btn-square rounded-lg p-0",
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -32,22 +31,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={isLoading || disabled}
         className={cn(
-          "inline-flex items-center justify-center font-bold tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50 disabled:pointer-events-none",
+          "btn border-none shadow-none font-bold tracking-tight",
           variants[variant],
           sizes[size],
           className
         )}
         {...props}
       >
-        {isLoading ? (
-          <Loader2 className="animate-spin" size={size === 'sm' ? 14 : 18} />
-        ) : (
-          <>
-            {leftIcon && <span className="flex shrink-0">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="flex shrink-0">{rightIcon}</span>}
-          </>
-        )}
+        {isLoading && <span className="loading loading-spinner"></span>}
+        {!isLoading && leftIcon && <span className="flex shrink-0">{leftIcon}</span>}
+        {!isLoading && children}
+        {!isLoading && rightIcon && <span className="flex shrink-0">{rightIcon}</span>}
       </button>
     );
   }

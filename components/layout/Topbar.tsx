@@ -1,57 +1,111 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import SidebarNav from "./SidebarNav";
 
 export default function Topbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Open: mount first, then animate in on next frame
+  useEffect(() => {
+    if (isOpen) {
+      // Force a reflow before setting visible so the transition plays
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+      });
+    }
+  }, [isOpen]);
+
+  // Close: animate out, then unmount after transition ends
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    // Wait for the transition to finish before unmounting
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 300);
+  }, []);
 
   return (
     <>
-      <header className="md:hidden flex items-center justify-between px-4 py-4 bg-white border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary rounded-xl flex items-center justify-center size-8 shrink-0">
-            <svg width="12" height="16" viewBox="0 0 16 20" fill="none">
-              <path d="M9 0L0 11.5H7L5 20L16 8.5H9L11 0H9Z" fill="white" />
-            </svg>
+      {/* Top Header Bar */}
+      <header className="navbar md:hidden bg-base-100 border-b border-base-200 px-4 min-h-14">
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary rounded-xl flex items-center justify-center size-8 shrink-0">
+              <svg width="12" height="16" viewBox="0 0 16 20" fill="none">
+                <path d="M9 0L0 11.5H7L5 20L16 8.5H9L11 0H9Z" fill="white" />
+              </svg>
+            </div>
+            <span className="text-base-content font-bold leading-tight">EnergySync</span>
           </div>
-          <span className="text-slate-900 font-bold leading-tight">EnergySync</span>
         </div>
-        
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <Menu size={24} />
-        </button>
+        <div className="flex-none">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="btn btn-ghost btn-sm btn-square"
+            aria-label="Open menu"
+          >
+            <Menu size={22} />
+          </button>
+        </div>
       </header>
 
-      {/* Mobile Navigation overlay */}
+      {/* Mobile Drawer Overlay — always mounted when isOpen, animated via isVisible */}
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm"
-            onClick={() => setIsOpen(false)}
+          <div
+            className={`fixed inset-0 bg-base-content/20 backdrop-blur-sm transition-opacity duration-300 ${
+              isVisible ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleClose}
           />
-          
-          {/* Drawer */}
-          <div className="relative flex flex-col w-[256px] h-full bg-white shadow-xl pt-6 overflow-y-auto">
-            <div className="flex items-center gap-3 px-6 pb-6 mb-2 border-b border-slate-100">
-               <div className="bg-primary rounded-2xl flex items-center justify-center size-10 shrink-0">
+
+          {/* Drawer Panel — slide from left */}
+          <div
+            className={`relative flex flex-col w-[280px] h-full bg-base-100 shadow-2xl overflow-y-auto transition-transform duration-300 ease-out ${
+              isVisible ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <div className="flex items-center gap-3 px-5 pt-5 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary rounded-2xl flex items-center justify-center size-10 shrink-0">
                   <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
                     <path d="M9 0L0 11.5H7L5 20L16 8.5H9L11 0H9Z" fill="white" />
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-slate-900 text-lg font-bold leading-tight">EnergySync</span>
-                  <span className="text-slate-500 text-xs">Smart Home Monitor</span>
+                  <span className="text-base-content text-lg font-bold leading-tight">EnergySync</span>
+                  <span className="text-base-content/50 text-xs">Smart Home Monitor</span>
                 </div>
+              </div>
             </div>
-            
-            <div onClick={() => setIsOpen(false)} className="flex-1 flex flex-col">
+
+            <div className="divider my-0 mx-5"></div>
+
+            {/* Navigation */}
+            <div onClick={handleClose} className="flex-1 flex flex-col">
               <SidebarNav />
+            </div>
+
+            {/* Bottom User Section */}
+            <div className="border-t border-base-200 px-5 py-4 mt-auto">
+              <div className="flex items-center gap-3">
+                <div className="avatar placeholder">
+                  <div className="bg-primary/10 text-primary rounded-full w-9 h-9">
+                    <span className="text-xs font-bold">K</span>
+                  </div>
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-base-content truncate">Kitta</span>
+                  <span className="text-xs text-base-content/40 truncate">Free Plan</span>
+                </div>
+                <div className="badge badge-primary badge-outline badge-xs">Free</div>
+              </div>
             </div>
           </div>
         </div>

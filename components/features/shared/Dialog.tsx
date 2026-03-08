@@ -14,6 +14,13 @@ type DialogProps = {
 export default function Dialog({ isOpen, onClose, title, children }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
+  const onCloseRef = useRef(onClose);
+  
+  // Update ref when onClose changes without triggering useEffect
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   // Focus trap & Escape listener & Body scroll lock
   useEffect(() => {
     if (!isOpen) return;
@@ -36,22 +43,22 @@ export default function Dialog({ isOpen, onClose, title, children }: DialogProps
     if (firstElement) {
        firstElement.focus();
     } else {
-        dialogRef.current?.focus(); // Fallback if no focusable children
+        dialogRef.current?.focus();
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
       }
 
       // Focus trap logic
       if (e.key === 'Tab') {
-        if (e.shiftKey) { // Shift + Tab
+        if (e.shiftKey) {
           if (document.activeElement === firstElement || document.activeElement === dialogRef.current) {
             e.preventDefault();
             lastElement?.focus();
           }
-        } else { // Tab
+        } else {
           if (document.activeElement === lastElement) {
             e.preventDefault();
             firstElement?.focus();
@@ -67,7 +74,7 @@ export default function Dialog({ isOpen, onClose, title, children }: DialogProps
       document.body.style.overflow = "unset";
       document.body.style.paddingRight = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -75,7 +82,7 @@ export default function Dialog({ isOpen, onClose, title, children }: DialogProps
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-base-content/40 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -84,21 +91,21 @@ export default function Dialog({ isOpen, onClose, title, children }: DialogProps
       <div 
         ref={dialogRef}
         tabIndex={-1}
-        className="relative flex flex-col w-full max-w-[448px] bg-white rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-200 outline-none"
+        className="relative flex flex-col w-full max-w-[448px] bg-base-100 rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-200 outline-none"
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-          <h3 id="dialog-title" className="text-xl font-bold text-slate-900">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-base-200">
+          <h3 id="dialog-title" className="text-xl font-bold text-base-content">
             {title}
           </h3>
           <Button 
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="size-8 p-0 text-slate-400 hover:text-slate-600 focus:ring-offset-2"
+            className="size-8 p-0 text-base-content/40 hover:text-base-content/60 focus:ring-offset-2"
             aria-label="Close dialog"
           >
             <X size={18} />
