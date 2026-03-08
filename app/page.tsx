@@ -1,20 +1,18 @@
-import PageHeader from "@/components/PageHeader";
-import StatCard from "@/components/StatCard";
-import TrendBadge from "@/components/TrendBadge";
-import EnergyChart from "@/components/EnergyChart";
-import ConsumerCard from "@/components/ConsumerCard";
-
-
+import PageHeader from "@/components/layout/PageHeader";
+import StatCard from "@/components/features/dashboard/StatCard";
+import TrendBadge from "@/components/ui/TrendBadge";
+import EnergyChart from "@/components/features/dashboard/EnergyChart";
+import ConsumerCard from "@/components/features/dashboard/ConsumerCard";
 
 export default function DashboardPage() {
   return (
-    <main className="p-8 lg:p-12 w-full max-w-[1200px] mx-auto flex flex-col min-h-full">
+    <main className="p-4 md:p-6 lg:p-8 w-full max-w-5xl mx-auto flex flex-col min-h-full">
       {/* Header */}
         <PageHeader
           title="Energy Dashboard"
           actions={
             <div className="flex items-center gap-4">
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-end hidden sm:flex">
                 <span className="text-sm font-medium text-slate-900">Monday, Oct 24</span>
                 <span className="text-xs text-slate-500 uppercase">Viewing Real-time Data</span>
               </div>
@@ -23,7 +21,7 @@ export default function DashboardPage() {
         />
 
         {/* Summary Cards */}
-        <div className="mt-10 grid grid-cols-2 gap-6">
+        <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           <StatCard
             label="Total Monthly Consumption"
             value="1,240"
@@ -43,14 +41,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Chart */}
-        <div className="mt-10">
+        <div className="mt-6 md:mt-8">
           <EnergyChart />
         </div>
 
         {/* Top Energy Consumers */}
-        <div className="mt-10">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Top Energy Consumers</h2>
-          <div className="grid grid-cols-3 gap-6">
+        <div className="mt-6 md:mt-8">
+          <h2 className="text-lg font-bold text-slate-900 mb-4 md:mb-5">Top Energy Consumers</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             <ConsumerCard
               name="Air Conditioner"
               location="Master Bedroom"

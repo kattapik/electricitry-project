@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 interface MonthRangePickerProps {
@@ -22,9 +22,10 @@ const FULL_MONTH_NAMES = [
 ];
 
 function formatDisplayDate(dateStr: string) {
-  if (!dateStr) return "";
+  if (!dateStr || !dateStr.includes("-")) return "";
   const [year, monthStr] = dateStr.split("-");
   const monthIdx = parseInt(monthStr, 10) - 1;
+  if (isNaN(monthIdx) || monthIdx < 0 || monthIdx > 11) return "";
   return `${FULL_MONTH_NAMES[monthIdx]} ${year}`;
 }
 

@@ -1,5 +1,5 @@
 import { ChevronRight, Zap, DollarSign, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 type MonthCardProps = {
@@ -29,7 +29,7 @@ export default function MonthCard({
       : "text-slate-400";
 
   return (
-    <div className="bg-white border border-slate-100 rounded-xl shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-6 flex flex-col gap-6">
+    <div className="bg-white border border-slate-100 rounded-xl shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-5 flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
