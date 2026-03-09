@@ -19,20 +19,6 @@ export default function Sidebar() {
       {/* Navigation */}
       <SidebarNav />
 
-      {/* Bottom section - subtle branding */}
-      <div className="px-6 py-4 border-t border-base-200 mt-auto">
-        <div className="flex items-center gap-3">
-          <div className="avatar placeholder">
-            <div className="bg-primary/10 text-primary rounded-full w-8 h-8">
-              <span className="text-xs font-bold">K</span>
-            </div>
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold text-base-content truncate">Kitta</span>
-            <span className="text-xs text-base-content/40 truncate">Free Plan</span>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }

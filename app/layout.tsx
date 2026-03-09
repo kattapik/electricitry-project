@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EnergySync - Smart Home Monitor",
-  description: "Energy consumption dashboard for smart home monitoring",
+  title: "EnergySync - Electricity Calculator",
+  description: "Energy consumption dashboard for monitoring",
 };
 
 export default function RootLayout({

@@ -92,21 +92,7 @@ export default function Topbar() {
               <SidebarNav />
             </div>
 
-            {/* Bottom User Section */}
-            <div className="border-t border-base-200 px-5 py-4 mt-auto">
-              <div className="flex items-center gap-3">
-                <div className="avatar placeholder">
-                  <div className="bg-primary/10 text-primary rounded-full w-9 h-9">
-                    <span className="text-xs font-bold">K</span>
-                  </div>
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-sm font-semibold text-base-content truncate">Kitta</span>
-                  <span className="text-xs text-base-content/40 truncate">Free Plan</span>
-                </div>
-                <div className="badge badge-primary badge-outline badge-xs">Free</div>
-              </div>
-            </div>
+          
           </div>
         </div>
       )}
