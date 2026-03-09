@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Plus, Edit2, Trash2, Box } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
-import SearchInput from "@/components/ui/SearchInput";
 import Dialog from "@/components/features/shared/Dialog";
 import { Input } from "@/components/ui/Input";
+import SearchInput from "@/components/ui/SearchInput";
 
 // Initial mock data
 const initialRooms = [

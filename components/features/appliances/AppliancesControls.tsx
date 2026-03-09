@@ -1,18 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Layout } from "lucide-react";
+import { Plus, Cpu } from "lucide-react";
 import Dialog from "@/components/features/shared/Dialog";
 import { Button } from "@/components/ui/Button";
-import { Dropdown } from "@/components/ui/Dropdown";
 import { Input } from "@/components/ui/Input";
+import SearchableSelect, { SelectOption } from "@/components/ui/SearchableSelect";
+import { SharedAppliance } from "@/lib/data/appliances";
 
-export default function AppliancesControls() {
+const ROOM_OPTIONS: SelectOption[] = [
+  { value: "kitchen", label: "Kitchen" },
+  { value: "living_room", label: "Living Room" },
+  { value: "bedroom", label: "Master Bedroom" },
+  { value: "laundry", label: "Laundry Room" },
+];
+
+// Convert SharedAppliance[] → SelectOption[] for the generic select
+function toApplianceOptions(appliances: SharedAppliance[]): SelectOption[] {
+  return appliances.map(app => ({
+    value: app.name,
+    label: app.name,
+    image: app.image?.startsWith("http") || app.image?.startsWith("data:") ? app.image : undefined,
+    icon: <Cpu size={14} />,
+  }));
+}
+
+export default function AppliancesControls({ appliances }: { appliances: SharedAppliance[] }) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [usage, setUsage] = useState("");
   const [consumption, setConsumption] = useState("");
   const [room, setRoom] = useState("");
+
+  const applianceOptions = toApplianceOptions(appliances);
 
   const handleOpen = () => {
     setName("");
@@ -24,7 +44,6 @@ export default function AppliancesControls() {
 
   const handleAdd = () => {
     // In a real app, this would save to the backend.
-    // For now, we just close and simulate success.
     setIsAddOpen(false);
   };
 
@@ -44,13 +63,17 @@ export default function AppliancesControls() {
         onClose={() => setIsAddOpen(false)}
         title="Add New Appliance"
       >
-        <div className="flex flex-col gap-5 p-6 border-b border-base-200">
-          <Input
-            label="Appliance Name"
-            type="text"
-            placeholder="e.g., Refrigerator"
+        <div className="flex flex-col gap-5 p-6 border-b border-base-200 overflow-visible">
+          {/* Appliance picker */}
+          <SearchableSelect
+            label="Appliance"
+            options={applianceOptions}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(opt) => setName(opt ? opt.value : "")}
+            placeholder="Select an appliance..."
+            searchPlaceholder="Search appliances..."
+            emptyMessage="No appliances found"
+            showImages
           />
 
           <div className="flex gap-4">
@@ -72,18 +95,15 @@ export default function AppliancesControls() {
             />
           </div>
 
-          <Dropdown
+          {/* Room picker — same component, no images */}
+          <SearchableSelect
             label="Select Room"
-            placeholder="Select a room..."
+            options={ROOM_OPTIONS}
             value={room}
-            onChange={(val) => setRoom(val)}
-            options={[
-              { value: "kitchen", label: "Kitchen", icon: <Layout size={14} /> },
-              { value: "living_room", label: "Living Room", icon: <Layout size={14} /> },
-              { value: "bedroom", label: "Master Bedroom", icon: <Layout size={14} /> },
-              { value: "laundry", label: "Laundry Room", icon: <Layout size={14} /> },
-            ]}
-            fullWidth
+            onChange={(opt) => setRoom(opt ? opt.value : "")}
+            placeholder="Select a room..."
+            searchPlaceholder="Search rooms..."
+            emptyMessage="No rooms found"
           />
         </div>
 

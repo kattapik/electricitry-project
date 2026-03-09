@@ -29,6 +29,22 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
   // Loading state for Server Actions
   const [isPendingAction, setIsPendingAction] = useState(false);
 
+  // Image Upload Handler
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        alert("Image must be smaller than 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageInput(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Handlers
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +115,9 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
     setNameInput(appliance.name);
     setImageInput(appliance.image || "");
     setIsEditOpen(true);
+    // Reset file input if any
+    const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
+    fileInputs.forEach(input => input.value = '');
   };
 
   const openDelete = (appliance: SharedAppliance) => {
@@ -123,6 +142,9 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
             setNameInput("");
             setImageInput("");
             setIsAddOpen(true);
+            // Reset file input if any
+            const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
+            fileInputs.forEach(input => input.value = '');
           }}
           className="w-full sm:w-auto"
         >
@@ -155,7 +177,7 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 text-primary size-10 flex items-center justify-center rounded-lg text-lg truncate overflow-hidden shrink-0">
                           {app.image ? (
-                            app.image.startsWith('http') ? (
+                            app.image.startsWith('http') || app.image.startsWith('data:') ? (
                               <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
                             ) : app.image
                           ) : <Cpu size={18} />}
@@ -198,7 +220,7 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 text-primary size-10 flex items-center justify-center rounded-lg text-lg truncate overflow-hidden shrink-0">
                     {app.image ? (
-                      app.image.startsWith('http') ? (
+                      app.image.startsWith('http') || app.image.startsWith('data:') ? (
                         <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
                       ) : app.image
                     ) : <Cpu size={18} />}
@@ -241,13 +263,28 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
             autoFocus
             disabled={isPendingAction}
           />
-          <Input 
-            label="Image (Optional)" 
-            placeholder="e.g. ❄️ or URL" 
-            value={imageInput}
-            onChange={(e) => setImageInput(e.target.value)}
-            disabled={isPendingAction}
-          />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-base-content/70">Image (Optional)</span>
+            <div className="flex items-center gap-4 mt-1">
+              <div className="bg-primary/10 text-primary w-16 h-16 flex items-center justify-center rounded-xl text-3xl overflow-hidden shrink-0 border border-base-200">
+                {imageInput ? (
+                  imageInput.startsWith('http') || imageInput.startsWith('data:') ? (
+                    <img src={imageInput} alt="Preview" className="w-full h-full object-cover" />
+                  ) : <span className="text-xl">{imageInput}</span>
+                ) : <Cpu size={24} />}
+              </div>
+              <div className="flex-1 flex flex-col gap-1">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isPendingAction}
+                  className="file-input file-input-bordered file-input-sm w-full bg-base-200/50"
+                />
+                <p className="text-xs text-base-content/40">Accepts images up to 2MB</p>
+              </div>
+            </div>
+          </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)} disabled={isPendingAction}>
               Cancel
@@ -275,13 +312,28 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
             autoFocus
             disabled={isPendingAction}
           />
-          <Input 
-            label="Image (Optional)" 
-            placeholder="e.g. ❄️ or URL" 
-            value={imageInput}
-            onChange={(e) => setImageInput(e.target.value)}
-            disabled={isPendingAction}
-          />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-base-content/70">Image (Optional)</span>
+            <div className="flex items-center gap-4 mt-1">
+              <div className="bg-primary/10 text-primary w-16 h-16 flex items-center justify-center rounded-xl text-3xl overflow-hidden shrink-0 border border-base-200">
+                {imageInput ? (
+                  imageInput.startsWith('http') || imageInput.startsWith('data:') ? (
+                    <img src={imageInput} alt="Preview" className="w-full h-full object-cover" />
+                  ) : <span className="text-xl">{imageInput}</span>
+                ) : <Cpu size={24} />}
+              </div>
+              <div className="flex-1 flex flex-col gap-1">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isPendingAction}
+                  className="file-input file-input-bordered file-input-sm w-full bg-base-200/50"
+                />
+                <p className="text-xs text-base-content/40">Accepts images up to 2MB</p>
+              </div>
+            </div>
+          </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)} disabled={isPendingAction}>
               Cancel

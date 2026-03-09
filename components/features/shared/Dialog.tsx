@@ -91,7 +91,7 @@ export default function Dialog({ isOpen, onClose, title, children }: DialogProps
       <div 
         ref={dialogRef}
         tabIndex={-1}
-        className="relative flex flex-col w-full max-w-[448px] bg-base-100 rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-200 outline-none"
+        className="relative flex flex-col w-full max-w-[448px] bg-base-100 rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-200 outline-none overflow-visible"
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"

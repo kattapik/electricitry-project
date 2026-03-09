@@ -105,7 +105,7 @@ export default function MonthlyRecordsClient({ initialAppliances, searchQuery, d
                 defaultValue={searchQuery}
               />
             </div>
-            <AppliancesControls />
+            <AppliancesControls appliances={initialAppliances} />
           </div>
         </div>
 

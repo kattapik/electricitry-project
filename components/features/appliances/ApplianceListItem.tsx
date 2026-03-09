@@ -46,19 +46,19 @@ export default function ApplianceListItem({ appliance }: ApplianceListItemProps)
       </td>
 
       {/* 3. Energy */}
-      <td className="flex justify-between items-center p-0 border-0 md:px-4 md:py-3 md:table-cell w-full md:w-auto pt-3 md:pt-3 align-middle">
+      <td className="flex justify-between items-center p-0 border-0 md:px-4 md:py-3 md:table-cell w-full md:w-auto pt-3 md:pt-3 align-middle md:text-center">
         <span className="text-xs font-semibold text-base-content/50 md:hidden">Energy</span>
-        <div className="flex items-baseline gap-1 md:flex-col md:items-start md:gap-0">
+        <div className="flex items-baseline gap-1 md:block">
           <span className="text-[13px] font-semibold md:font-normal text-base-content/90 md:text-base-content/70">{appliance.energyKwh || "0.0"}</span>
           <span className="text-xs text-base-content/50 md:hidden">kWh/unit</span>
-          <span className="hidden md:inline text-xs text-base-content/50">kWh/unit</span>
+          <span className="hidden md:inline text-xs text-base-content/50"> kWh/unit</span>
         </div>
       </td>
 
       {/* 4. Cost */}
-      <td className="flex justify-between items-center p-0 border-0 md:px-4 md:py-3 md:table-cell w-full md:w-auto pt-3 md:pt-3 align-middle">
+      <td className="flex justify-between items-center p-0 border-0 md:px-4 md:py-3 md:table-cell w-full md:w-auto pt-3 md:pt-3 align-middle md:text-right md:pr-4">
         <span className="text-xs font-semibold text-base-content/50 md:hidden">Est. Cost (฿)</span>
-        <div className="flex flex-col items-end md:items-start">
+        <div className="flex flex-col items-end md:block">
           <span className="text-[15px] md:text-[13px] font-bold md:font-medium text-base-content">{appliance.cost ? appliance.cost : "0.00"}</span>
         </div>
       </td>
