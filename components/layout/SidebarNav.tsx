@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Calendar, ChevronRight, Box, Cpu } from "lucide-react";
+import { LayoutDashboard, Calendar, ChevronRight, Box, PlugZap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -22,7 +22,7 @@ const navItems = [
     href: "/appliances",
     label: "Appliances",
     description: "Manage appliance reference",
-    icon: Cpu,
+    icon: PlugZap,
   },
 
   {
@@ -73,10 +73,10 @@ export default function SidebarNav() {
 
             {/* Text block */}
             <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-[13px] font-bold leading-tight">{item.label}</span>
+              <span className="text-[13px] font-bold leading-tight truncate">{item.label}</span>
               <span
                 className={cn(
-                  "text-[10px] leading-tight mt-0.5",
+                  "text-[10px] leading-tight mt-0.5 truncate",
                   isActive ? "text-white/60" : "text-base-content/30 group-hover:text-base-content/40"
                 )}
               >
@@ -89,11 +89,6 @@ export default function SidebarNav() {
               <ChevronRight size={14} className="opacity-60 shrink-0" />
             ) : (
               <div className="size-1.5 rounded-full bg-base-content/0 group-hover:bg-primary/40 shrink-0" />
-            )}
-
-            {/* Active left bar indicator */}
-            {isActive && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white/50 rounded-r-full" />
             )}
           </Link>
         );
