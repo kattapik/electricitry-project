@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Languages } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 
-import { routing, usePathname, useRouter } from '@/app/i18n/routing';
+import { routing } from '@/app/i18n/routing';
 
 type LocaleOption = {
   code: (typeof routing.locales)[number];
@@ -13,7 +15,7 @@ type LocaleOption = {
 export default function LanguageSwitcher() {
   const t = useTranslations();
   const locale = useLocale() as LocaleOption['code'];
-  const pathname = usePathname();
+  const [selectedLocale, setSelectedLocale] = useState<LocaleOption['code']>(locale);
   const router = useRouter();
 
   const options: LocaleOption[] = [
@@ -27,10 +29,12 @@ export default function LanguageSwitcher() {
       <span className="sr-only">{t('language.switcherLabel')}</span>
       <select
         className="select select-sm select-bordered h-8 min-h-8 rounded-lg bg-base-200/50"
-        value={locale}
+        value={selectedLocale}
         onChange={(event) => {
           const nextLocale = event.target.value as LocaleOption['code'];
-          router.replace(pathname, { locale: nextLocale });
+          setSelectedLocale(nextLocale);
+          document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+          router.refresh();
         }}
         aria-label={t('language.switcherLabel')}
       >
