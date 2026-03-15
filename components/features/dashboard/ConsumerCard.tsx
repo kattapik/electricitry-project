@@ -1,11 +1,12 @@
 import * as React from "react";
+import Image from "next/image";
 
 type ConsumerCardProps = {
   name: string;
   location: string;
   percentage: number;
   kwh: string;
-  emoji: string;
+  imageUrl?: string;
 };
 
 export default function ConsumerCard({
@@ -13,16 +14,28 @@ export default function ConsumerCard({
   location,
   percentage,
   kwh,
-  emoji,
+  imageUrl,
 }: ConsumerCardProps) {
   const clampedPercentage = Math.max(0, Math.min(100, percentage));
+  const hasImage = imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('data:'));
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200 flex-1 min-w-0 hover:shadow-md transition-shadow">
       <div className="card-body p-4 md:p-5 items-center gap-0">
-        {/* Icon */}
-        <div className="bg-base-200/60 rounded-full size-14 flex items-center justify-center mb-3 shrink-0">
-          <span className="text-2xl">{emoji}</span>
+        {/* Icon/Image */}
+        <div className="bg-base-200/60 rounded-full size-14 flex items-center justify-center mb-3 shrink-0 overflow-hidden">
+          {hasImage ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              width={56}
+              height={56}
+              className="size-full object-cover"
+              unoptimized
+            />
+          ) : (
+            <span className="text-2xl">{imageUrl || '🔌'}</span>
+          )}
         </div>
 
         {/* Name */}

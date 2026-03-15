@@ -25,6 +25,10 @@ export interface DashboardChartPoint {
   forecastUsage: number;
 }
 
+export interface UsageEntryEvent extends MonthlyUsageEntryInput {
+  id: string;
+}
+
 function parseFormattedValue(value: string): number {
   return Number(value.replace(/[^0-9.]+/g, ''));
 }
@@ -34,6 +38,7 @@ function formatChartLabel(month: string, year: string): string {
 }
 
 const monthlyRecordsDb: MonthlyRecord[] = getInitialMonthlyRecords();
+const processedUsageEntryIds = new Set<string>();
 
 function cloneRecord(record: MonthlyRecord): MonthlyRecord {
   return {
@@ -169,8 +174,40 @@ export const monthlyService = {
       if (!existingSlugs.has(slug)) {
         this.createMonthRecord(record);
         existingSlugs.add(slug);
+      } else {
+        this.updateMonthlyRate(slug, record.rate);
       }
     });
+  },
+
+  syncUsageEntries(entries: UsageEntryEvent[]): void {
+    entries.forEach((entry) => {
+      if (processedUsageEntryIds.has(entry.id)) {
+        return;
+      }
+
+      this.addMonthlyUsageEntry({
+        monthSlug: entry.monthSlug,
+        roomId: entry.roomId,
+        applianceId: entry.applianceId,
+        usageHrs: entry.usageHrs,
+        energyKwh: entry.energyKwh,
+      });
+      processedUsageEntryIds.add(entry.id);
+    });
+  },
+
+  applyUsageEntryEvent(entry: UsageEntryEvent): { record: MonthlyRecord; merged: boolean } {
+    const result = this.addMonthlyUsageEntry({
+      monthSlug: entry.monthSlug,
+      roomId: entry.roomId,
+      applianceId: entry.applianceId,
+      usageHrs: entry.usageHrs,
+      energyKwh: entry.energyKwh,
+    });
+
+    processedUsageEntryIds.add(entry.id);
+    return result;
   },
 
   getMonthlySummaries(): MonthlySummary[] {
@@ -235,7 +272,7 @@ export const monthlyService = {
           location: string;
           percentage: number;
           kwh: string;
-          emoji: string;
+          imageUrl: string;
         }>,
       };
     }
@@ -261,7 +298,7 @@ export const monthlyService = {
         location: appliance.roomName,
         percentage: latestUsageValue > 0 ? Math.round((appliance.energyKwh / latestUsageValue) * 100) : 0,
         kwh: formatUsage(appliance.energyKwh),
-        emoji: appliance.image.startsWith('http') ? '🔌' : appliance.image,
+        imageUrl: appliance.image,
       })),
     };
   },
@@ -270,12 +307,35 @@ export const monthlyService = {
     const effectiveLimit = Math.max(1, Math.floor(limit));
     const recentRecords = monthlyRecordsDb.slice(0, effectiveLimit).reverse();
 
-    return recentRecords.map((record) => ({
-      slug: record.slug,
-      label: formatChartLabel(record.month, record.year),
-      actualUsage: parseFormattedValue(record.totalUsage),
-      forecastUsage: Number(record.previousUsage.toFixed(1)),
-    }));
+    // For each record, calculate forecast based on average of previous 3 months
+    return recentRecords.map((record) => {
+      // Find the record's position in the original (descending) array
+      const recordPosition = monthlyRecordsDb.findIndex(r => r.slug === record.slug);
+      
+      // Get previous 3 months for averaging (records after this one in the array)
+      const previousRecords = monthlyRecordsDb.slice(recordPosition + 1, recordPosition + 4);
+      
+      let forecastUsage: number;
+      if (previousRecords.length >= 3) {
+        // Use average of previous 3 months
+        const sum = previousRecords.reduce((acc, r) => acc + parseFormattedValue(r.totalUsage), 0);
+        forecastUsage = Number((sum / 3).toFixed(1));
+      } else if (previousRecords.length > 0) {
+        // Use average of available previous months
+        const sum = previousRecords.reduce((acc, r) => acc + parseFormattedValue(r.totalUsage), 0);
+        forecastUsage = Number((sum / previousRecords.length).toFixed(1));
+      } else {
+        // No previous data, use a default or 0
+        forecastUsage = 0;
+      }
+
+      return {
+        slug: record.slug,
+        label: formatChartLabel(record.month, record.year),
+        actualUsage: parseFormattedValue(record.totalUsage),
+        forecastUsage,
+      };
+    });
   },
 
   createMonthRecord(input: CreateMonthRecordInput): MonthlyRecord {
@@ -286,13 +346,29 @@ export const monthlyService = {
       throw new Error(`A record for ${input.month} ${input.year} already exists`);
     }
 
-    const previousRecord = monthlyRecordsDb[0];
-    const previousUsage = previousRecord ? parseFormattedValue(previousRecord.totalUsage) : 0;
-    const previousCost = previousRecord ? parseFormattedValue(previousRecord.monthlyCost) : 0;
+    // Calculate forecast based on average of previous 3 months
+    const previousRecords = monthlyRecordsDb.slice(0, 3);
+    let previousUsage: number;
+    let previousCost: number;
+
+    if (previousRecords.length >= 3) {
+      const avgUsage = previousRecords.reduce((acc, r) => acc + parseFormattedValue(r.totalUsage), 0) / 3;
+      const avgCost = previousRecords.reduce((acc, r) => acc + parseFormattedValue(r.monthlyCost.replace('฿', '')), 0) / 3;
+      previousUsage = Number(avgUsage.toFixed(1));
+      previousCost = Number(avgCost.toFixed(2));
+    } else if (previousRecords.length > 0) {
+      const avgUsage = previousRecords.reduce((acc, r) => acc + parseFormattedValue(r.totalUsage), 0) / previousRecords.length;
+      const avgCost = previousRecords.reduce((acc, r) => acc + parseFormattedValue(r.monthlyCost.replace('฿', '')), 0) / previousRecords.length;
+      previousUsage = Number(avgUsage.toFixed(1));
+      previousCost = Number(avgCost.toFixed(2));
+    } else {
+      previousUsage = 0;
+      previousCost = 0;
+    }
 
     // Demote the current latest record
-    if (previousRecord) {
-      previousRecord.isLatest = false;
+    if (previousRecords.length > 0) {
+      previousRecords[0].isLatest = false;
     }
 
     const newRecord: MonthlyRecord = {
@@ -314,6 +390,31 @@ export const monthlyService = {
 
     monthlyRecordsDb.unshift(newRecord);
     return { ...newRecord };
+  },
+
+  updateMonthlyRate(monthSlug: string, nextRate: number): MonthlyRecord {
+    if (!Number.isFinite(nextRate) || nextRate <= 0) {
+      throw new Error('Electricity rate must be greater than 0');
+    }
+
+    const recordIndex = monthlyRecordsDb.findIndex((item) => item.slug === monthSlug.toLowerCase());
+
+    if (recordIndex < 0) {
+      throw new Error('Target month was not found');
+    }
+
+    const targetRecord = monthlyRecordsDb[recordIndex];
+    targetRecord.rate = nextRate;
+    targetRecord.rooms = targetRecord.rooms.map((room) => ({
+      ...room,
+      appliances: room.appliances.map((appliance) => ({
+        ...appliance,
+        cost: Number((appliance.energyKwh * nextRate).toFixed(2)),
+      })),
+    }));
+
+    monthlyRecordsDb[recordIndex] = recalculateRecord(targetRecord);
+    return cloneRecord(monthlyRecordsDb[recordIndex]);
   },
 
   addMonthlyUsageEntry(input: MonthlyUsageEntryInput): { record: MonthlyRecord; merged: boolean } {

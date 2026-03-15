@@ -1,66 +1,189 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Plus, Edit2, Trash2, Cpu } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import Dialog from "@/components/features/shared/Dialog";
-import { Input } from "@/components/ui/Input";
-import URLSearchInput from "@/components/ui/URLSearchInput";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Cpu, Edit2, Plus, Trash2 } from 'lucide-react';
 
-import { addApplianceAction, editApplianceAction, deleteApplianceAction } from "@/lib/actions/appliances";
-import { SharedAppliance } from "@/lib/data/appliances";
+import Dialog from '@/components/features/shared/Dialog';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import URLSearchInput from '@/components/ui/URLSearchInput';
+import {
+  addApplianceAction,
+  deleteApplianceAction,
+  editApplianceAction,
+  getAppliancesPageAction,
+} from '@/lib/actions/appliances';
+import type { SharedAppliance } from '@/lib/data/appliances';
 
 interface Props {
   initialAppliances: SharedAppliance[];
+  initialHasMore: boolean;
+  initialTotal: number;
+  pageSize: number;
   searchQuery?: string;
 }
 
-export default function ApplianceManagementClient({ initialAppliances, searchQuery }: Props) {
+export default function ApplianceManagementClient({
+  initialAppliances,
+  initialHasMore,
+  initialTotal,
+  pageSize,
+  searchQuery,
+}: Props) {
+  const normalizedQuery = useMemo(() => searchQuery?.trim() || '', [searchQuery]);
+
   // Dialog state
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  
+
   // Form state
   const [currentAppliance, setCurrentAppliance] = useState<SharedAppliance | null>(null);
-  const [nameInput, setNameInput] = useState("");
-  const [imageInput, setImageInput] = useState("");
-  
-  // Loading state for Server Actions
+  const [nameInput, setNameInput] = useState('');
+  const [imageInput, setImageInput] = useState('');
+
+  // Loading state for CRUD server actions
   const [isPendingAction, setIsPendingAction] = useState(false);
 
-  // Image Upload Handler
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert("Image must be smaller than 2MB");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageInput(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  // Infinite scroll state
+  const [appliances, setAppliances] = useState<SharedAppliance[]>(() => initialAppliances);
+  const [page, setPage] = useState<number>(() => 1);
+  const [hasMore, setHasMore] = useState<boolean>(() => initialHasMore);
+  const [totalItems, setTotalItems] = useState<number>(() => initialTotal);
+  const [isFetchingMore, setIsFetchingMore] = useState<boolean>(() => false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(() => null);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const resetFileInputs = () => {
+    const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
+    fileInputs.forEach((input) => {
+      input.value = '';
+    });
   };
 
-  // Handlers
+  const reloadFirstPage = useCallback(async () => {
+    setIsFetchingMore(true);
+    setLoadMoreError(null);
+
+    const result = await getAppliancesPageAction({
+      query: normalizedQuery,
+      page: 1,
+      limit: pageSize,
+    });
+
+    if (!result.success) {
+      setLoadMoreError(result.error ?? 'Failed to refresh appliance list.');
+      setIsFetchingMore(false);
+      return;
+    }
+
+    setAppliances(result.items);
+    setHasMore(result.hasMore);
+    setTotalItems(result.total);
+    setPage(1);
+    setIsFetchingMore(false);
+  }, [normalizedQuery, pageSize]);
+
+  const loadNextPage = useCallback(async () => {
+    if (isFetchingMore || !hasMore) {
+      return;
+    }
+
+    setIsFetchingMore(true);
+    setLoadMoreError(null);
+
+    const nextPage = page + 1;
+    const result = await getAppliancesPageAction({
+      query: normalizedQuery,
+      page: nextPage,
+      limit: pageSize,
+    });
+
+    if (!result.success) {
+      setLoadMoreError(result.error ?? 'Failed to load more appliances.');
+      setIsFetchingMore(false);
+      return;
+    }
+
+    setAppliances((prev) => {
+      const existingIds = new Set(prev.map((item) => item.id));
+      const uniqueIncoming = result.items.filter((item) => !existingIds.has(item.id));
+      return [...prev, ...uniqueIncoming];
+    });
+    setHasMore(result.hasMore);
+    setTotalItems(result.total);
+    setPage(nextPage);
+    setIsFetchingMore(false);
+  }, [hasMore, isFetchingMore, normalizedQuery, page, pageSize]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (!firstEntry?.isIntersecting) {
+          return;
+        }
+
+        void loadNextPage();
+      },
+      {
+        root: null,
+        rootMargin: '200px',
+        threshold: 0,
+      },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loadNextPage]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be smaller than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageInput(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nameInput.trim() || isPendingAction) return;
-    
+    if (!nameInput.trim() || isPendingAction) {
+      return;
+    }
+
     setIsPendingAction(true);
     const formData = new FormData();
-    formData.append("name", nameInput);
-    if (imageInput) formData.append("image", imageInput);
+    formData.append('name', nameInput);
+    if (imageInput) {
+      formData.append('image', imageInput);
+    }
 
     const result = await addApplianceAction(formData);
-    
+
     if (result.success) {
       setIsAddOpen(false);
-      setNameInput("");
-      setImageInput("");
+      setNameInput('');
+      setImageInput('');
+      await reloadFirstPage();
     } else {
       console.error(result.error);
     }
@@ -69,41 +192,56 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentAppliance || !nameInput.trim() || isPendingAction) return;
+    if (!currentAppliance || !nameInput.trim() || isPendingAction) {
+      return;
+    }
 
     setIsPendingAction(true);
     const formData = new FormData();
-    formData.append("name", nameInput);
-    if (imageInput) formData.append("image", imageInput);
+    formData.append('name', nameInput);
+    if (imageInput) {
+      formData.append('image', imageInput);
+    }
 
-    // Keep existing monthly fields intact by passing them if they exist
-    if (currentAppliance.location) formData.append("location", currentAppliance.location);
-    if (currentAppliance.usageHrs) formData.append("usageHrs", currentAppliance.usageHrs);
-    if (currentAppliance.energyKwh) formData.append("energyKwh", currentAppliance.energyKwh);
-    if (currentAppliance.cost) formData.append("cost", currentAppliance.cost);
+    if (currentAppliance.location) {
+      formData.append('location', currentAppliance.location);
+    }
+    if (currentAppliance.usageHrs) {
+      formData.append('usageHrs', currentAppliance.usageHrs);
+    }
+    if (currentAppliance.energyKwh) {
+      formData.append('energyKwh', currentAppliance.energyKwh);
+    }
+    if (currentAppliance.cost) {
+      formData.append('cost', currentAppliance.cost);
+    }
 
     const result = await editApplianceAction(currentAppliance.id, formData);
-    
+
     if (result.success) {
       setIsEditOpen(false);
       setCurrentAppliance(null);
-      setNameInput("");
-      setImageInput("");
+      setNameInput('');
+      setImageInput('');
+      await reloadFirstPage();
     } else {
-       console.error(result.error);
+      console.error(result.error);
     }
     setIsPendingAction(false);
   };
 
   const handleDeleteSubmit = async () => {
-    if (!currentAppliance || isPendingAction) return;
-    
+    if (!currentAppliance || isPendingAction) {
+      return;
+    }
+
     setIsPendingAction(true);
     const result = await deleteApplianceAction(currentAppliance.id);
-    
+
     if (result.success) {
       setIsDeleteOpen(false);
       setCurrentAppliance(null);
+      await reloadFirstPage();
     } else {
       console.error(result.error);
     }
@@ -113,11 +251,9 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
   const openEdit = (appliance: SharedAppliance) => {
     setCurrentAppliance(appliance);
     setNameInput(appliance.name);
-    setImageInput(appliance.image || "");
+    setImageInput(appliance.image || '');
     setIsEditOpen(true);
-    // Reset file input if any
-    const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
-    fileInputs.forEach(input => input.value = '');
+    resetFileInputs();
   };
 
   const openDelete = (appliance: SharedAppliance) => {
@@ -125,26 +261,23 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
     setIsDeleteOpen(true);
   };
 
+  const hasNoResults = appliances.length === 0;
+  const hasLoadedEverything = !hasMore && appliances.length > 0;
+
   return (
     <>
-      {/* Controls Area */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1 w-full sm:w-auto">
-          <URLSearchInput 
-            placeholder="Search appliances..." 
-            defaultValue={searchQuery}
-          />
+          <URLSearchInput placeholder="Search appliances..." defaultValue={searchQuery} />
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           leftIcon={<Plus size={16} />}
           onClick={() => {
-            setNameInput("");
-            setImageInput("");
+            setNameInput('');
+            setImageInput('');
             setIsAddOpen(true);
-            // Reset file input if any
-            const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
-            fileInputs.forEach(input => input.value = '');
+            resetFileInputs();
           }}
           className="w-full sm:w-auto"
         >
@@ -152,9 +285,7 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
         </Button>
       </div>
 
-      {/* Appliances List / Table */}
       <div className="bg-base-100 border border-base-200 rounded-2xl overflow-hidden shadow-sm">
-        {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="table w-full">
             <thead className="bg-base-200/50 text-base-content/60 text-sm">
@@ -164,36 +295,43 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
               </tr>
             </thead>
             <tbody>
-              {initialAppliances.length === 0 ? (
+              {hasNoResults ? (
                 <tr>
                   <td colSpan={2} className="py-8 text-center text-base-content/50">
-                    No appliances found matching &quot;{searchQuery || ""}&quot;
+                    No appliances found matching &quot;{searchQuery || ''}&quot;
                   </td>
                 </tr>
               ) : (
-                initialAppliances.map((app) => (
-                  <tr key={app.id} className="hover:bg-base-200/30 transition-colors border-b border-base-200/50 last:border-0">
+                appliances.map((app) => (
+                  <tr
+                    key={app.id}
+                    className="hover:bg-base-200/30 transition-colors border-b border-base-200/50 last:border-0"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 text-primary size-10 flex items-center justify-center rounded-lg text-lg truncate overflow-hidden shrink-0">
                           {app.image ? (
                             app.image.startsWith('http') || app.image.startsWith('data:') ? (
                               <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
-                            ) : app.image
-                          ) : <Cpu size={18} />}
+                            ) : (
+                              app.image
+                            )
+                          ) : (
+                            <Cpu size={18} />
+                          )}
                         </div>
                         <span className="font-medium text-base-content p-1">{app.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button 
+                        <button
                           onClick={() => openEdit(app)}
                           className="btn btn-ghost btn-sm btn-square text-base-content/60 hover:text-primary"
                         >
                           <Edit2 size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => openDelete(app)}
                           className="btn btn-ghost btn-sm btn-square text-base-content/60 hover:text-error"
                         >
@@ -208,33 +346,36 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
           </table>
         </div>
 
-        {/* Mobile Card View */}
         <div className="md:hidden flex flex-col divide-y divide-base-200/50">
-          {initialAppliances.length === 0 ? (
+          {hasNoResults ? (
             <div className="py-8 text-center text-base-content/50">
-              No appliances found matching &quot;{searchQuery || ""}&quot;
+              No appliances found matching &quot;{searchQuery || ''}&quot;
             </div>
           ) : (
-            initialAppliances.map((app) => (
+            appliances.map((app) => (
               <div key={app.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 text-primary size-10 flex items-center justify-center rounded-lg text-lg truncate overflow-hidden shrink-0">
                     {app.image ? (
                       app.image.startsWith('http') || app.image.startsWith('data:') ? (
                         <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
-                      ) : app.image
-                    ) : <Cpu size={18} />}
+                      ) : (
+                        app.image
+                      )
+                    ) : (
+                      <Cpu size={18} />
+                    )}
                   </div>
                   <span className="font-medium text-base-content">{app.name}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button 
+                  <button
                     onClick={() => openEdit(app)}
                     className="btn btn-ghost btn-sm btn-square text-base-content/60 hover:text-primary"
                   >
                     <Edit2 size={16} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => openDelete(app)}
                     className="btn btn-ghost btn-sm btn-square text-base-content/60 hover:text-error"
                   >
@@ -245,18 +386,40 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
             ))
           )}
         </div>
+
+        <div className="border-t border-base-200/70 px-4 md:px-6 py-4 flex flex-col items-center gap-2 text-sm text-base-content/60">
+          <div>
+            Showing {appliances.length} of {totalItems} appliances
+          </div>
+
+          <div ref={sentinelRef} className="w-full h-1" aria-hidden="true" />
+
+          {isFetchingMore && (
+            <div className="flex items-center gap-2 text-base-content/70">
+              <span className="loading loading-spinner loading-sm" />
+              <span>Loading more appliances...</span>
+            </div>
+          )}
+
+          {!isFetchingMore && hasLoadedEverything && (
+            <p className="text-base-content/50">No more items.</p>
+          )}
+
+          {!isFetchingMore && loadMoreError && (
+            <p className="text-error text-center">{loadMoreError}</p>
+          )}
+        </div>
       </div>
 
-      {/* Add Appliance Dialog */}
-      <Dialog 
-        isOpen={isAddOpen} 
-        onClose={() => !isPendingAction && setIsAddOpen(false)} 
+      <Dialog
+        isOpen={isAddOpen}
+        onClose={() => !isPendingAction && setIsAddOpen(false)}
         title="Add Appliance"
       >
         <form onSubmit={handleAddSubmit} className="flex flex-col gap-4 p-6 pt-4">
-          <Input 
-            label="Appliance Name" 
-            placeholder="e.g. Air Conditioner" 
+          <Input
+            label="Appliance Name"
+            placeholder="e.g. Air Conditioner"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             required
@@ -270,12 +433,16 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
                 {imageInput ? (
                   imageInput.startsWith('http') || imageInput.startsWith('data:') ? (
                     <img src={imageInput} alt="Preview" className="w-full h-full object-cover" />
-                  ) : <span className="text-xl">{imageInput}</span>
-                ) : <Cpu size={24} />}
+                  ) : (
+                    <span className="text-xl">{imageInput}</span>
+                  )
+                ) : (
+                  <Cpu size={24} />
+                )}
               </div>
               <div className="flex-1 flex flex-col gap-1">
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
                   disabled={isPendingAction}
@@ -286,26 +453,30 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)} disabled={isPendingAction}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddOpen(false)}
+              disabled={isPendingAction}
+            >
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={!nameInput.trim() || isPendingAction}>
-              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : "Add Appliance"}
+              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : 'Add Appliance'}
             </Button>
           </div>
         </form>
       </Dialog>
 
-      {/* Edit Appliance Dialog */}
-      <Dialog 
-        isOpen={isEditOpen} 
-        onClose={() => !isPendingAction && setIsEditOpen(false)} 
+      <Dialog
+        isOpen={isEditOpen}
+        onClose={() => !isPendingAction && setIsEditOpen(false)}
         title="Edit Appliance"
       >
         <form onSubmit={handleEditSubmit} className="flex flex-col gap-4 p-6 pt-4">
-          <Input 
-            label="Appliance Name" 
-            placeholder="e.g. Air Conditioner" 
+          <Input
+            label="Appliance Name"
+            placeholder="e.g. Air Conditioner"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             required
@@ -319,12 +490,16 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
                 {imageInput ? (
                   imageInput.startsWith('http') || imageInput.startsWith('data:') ? (
                     <img src={imageInput} alt="Preview" className="w-full h-full object-cover" />
-                  ) : <span className="text-xl">{imageInput}</span>
-                ) : <Cpu size={24} />}
+                  ) : (
+                    <span className="text-xl">{imageInput}</span>
+                  )
+                ) : (
+                  <Cpu size={24} />
+                )}
               </div>
               <div className="flex-1 flex flex-col gap-1">
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
                   disabled={isPendingAction}
@@ -335,38 +510,52 @@ export default function ApplianceManagementClient({ initialAppliances, searchQue
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)} disabled={isPendingAction}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              disabled={isPendingAction}
+            >
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={!nameInput.trim() || isPendingAction}>
-               {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : "Save Changes"}
+              {isPendingAction ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : (
+                'Save Changes'
+              )}
             </Button>
           </div>
         </form>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog 
-        isOpen={isDeleteOpen} 
-        onClose={() => !isPendingAction && setIsDeleteOpen(false)} 
+      <Dialog
+        isOpen={isDeleteOpen}
+        onClose={() => !isPendingAction && setIsDeleteOpen(false)}
         title="Delete Appliance"
       >
         <div className="flex flex-col gap-4 p-6 pt-4">
           <p className="text-base-content/80 text-sm">
-            Are you sure you want to delete <span className="font-bold text-base-content">{currentAppliance?.name}</span>? 
-            This action cannot be undone.
+            Are you sure you want to delete{' '}
+            <span className="font-bold text-base-content">{currentAppliance?.name}</span>? This action cannot
+            be undone.
           </p>
           <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={isPendingAction}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+              disabled={isPendingAction}
+            >
               Cancel
             </Button>
-            <Button 
-              type="button" 
-              className="btn btn-error text-error-content font-semibold px-4 rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95" 
+            <Button
+              type="button"
+              className="btn btn-error text-error-content font-semibold px-4 rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95"
               onClick={handleDeleteSubmit}
               disabled={isPendingAction}
             >
-               {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : "Delete"}
+              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : 'Delete'}
             </Button>
           </div>
         </div>

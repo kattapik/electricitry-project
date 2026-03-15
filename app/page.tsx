@@ -3,11 +3,12 @@ import StatCard from "@/components/features/dashboard/StatCard";
 import TrendBadge from "@/components/ui/TrendBadge";
 import EnergyChart from "@/components/features/dashboard/EnergyChart";
 import ConsumerCard from "@/components/features/dashboard/ConsumerCard";
-import { getCustomMonthRecords } from '@/lib/server/customMonths';
+import { getCustomMonthRecords, getCustomUsageEntries } from '@/lib/server/customMonths';
 import { monthlyService } from '@/lib/services/monthlyService';
 
 export default async function DashboardPage() {
   monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+  monthlyService.syncUsageEntries(await getCustomUsageEntries());
   const dashboard = monthlyService.getDashboardSummary();
   const chartPoints = monthlyService.getDashboardChartData();
 
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
                 location={consumer.location}
                 percentage={consumer.percentage}
                 kwh={consumer.kwh}
-                emoji={consumer.emoji}
+                imageUrl={consumer.imageUrl}
               />
             ))}
           </div>

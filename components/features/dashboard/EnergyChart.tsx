@@ -1,25 +1,52 @@
-import { DashboardChartPoint } from '@/lib/services/monthlyService';
+'use client';
+
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import type { DashboardChartPoint } from '@/lib/services/monthlyService';
 
 interface EnergyChartProps {
   points: DashboardChartPoint[];
 }
 
-const CHART_WIDTH = 830;
-const CHART_HEIGHT = 256;
-const PADDING_X = 24;
-const PADDING_TOP = 16;
-const PADDING_BOTTOM = 32;
+function formatUsage(value: number) {
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: 1 })} kWh`;
+}
 
-function linePath(points: Array<{ x: number; y: number }>): string {
-  if (points.length === 0) {
-    return '';
+function formatTooltipValue(value: number | string | ReadonlyArray<number | string> | undefined): string {
+  if (typeof value === 'number') {
+    return formatUsage(value);
   }
 
-  if (points.length === 1) {
-    return `M${points[0].x},${points[0].y}`;
+  if (typeof value === 'string') {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return formatUsage(numeric);
+    }
+
+    return value;
   }
 
-  return points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x},${point.y}`).join(' ');
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0];
+    if (typeof first === 'number') {
+      return formatUsage(first);
+    }
+
+    if (typeof first === 'string') {
+      const numeric = Number(first);
+      return Number.isFinite(numeric) ? formatUsage(numeric) : first;
+    }
+  }
+
+  return '0 kWh';
 }
 
 export default function EnergyChart({ points }: EnergyChartProps) {
@@ -34,27 +61,6 @@ export default function EnergyChart({ points }: EnergyChartProps) {
     );
   }
 
-  const baselineY = CHART_HEIGHT - PADDING_BOTTOM;
-  const chartMax = Math.max(
-    1,
-    ...points.flatMap((point) => [point.actualUsage, point.forecastUsage])
-  );
-  const chartRangeY = baselineY - PADDING_TOP;
-  const xStep = points.length === 1 ? 0 : (CHART_WIDTH - PADDING_X * 2) / (points.length - 1);
-
-  const actualPoints = points.map((point, index) => ({
-    x: PADDING_X + xStep * index,
-    y: baselineY - (point.actualUsage / chartMax) * chartRangeY,
-  }));
-  const forecastPoints = points.map((point, index) => ({
-    x: PADDING_X + xStep * index,
-    y: baselineY - (point.forecastUsage / chartMax) * chartRangeY,
-  }));
-
-  const actualLine = linePath(actualPoints);
-  const forecastLine = linePath(forecastPoints);
-  const actualFill = `${actualLine} L${actualPoints[actualPoints.length - 1].x},${baselineY} L${actualPoints[0].x},${baselineY} Z`;
-
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200 w-full overflow-hidden">
       <div className="card-body p-5 md:p-6 gap-6">
@@ -63,52 +69,57 @@ export default function EnergyChart({ points }: EnergyChartProps) {
             <h3 className="text-lg font-bold text-base-content">Forecast vs. Actual</h3>
             <p className="text-sm text-base-content/50">Real consumption trend from monthly records</p>
           </div>
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-2">
-              <span className="badge badge-primary badge-xs rounded-full p-1.5" />
-              <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Actual</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="badge badge-ghost badge-xs rounded-full p-1.5" />
-              <span className="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Forecast</span>
-            </div>
-          </div>
         </div>
 
-        <div className="flex flex-col gap-4 w-full">
-          <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-auto" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#136dec" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#136dec" stopOpacity="0.02" />
-              </linearGradient>
-            </defs>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={points} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
+              <CartesianGrid strokeDasharray="4 4" stroke="rgba(100, 116, 139, 0.2)" />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 12, fill: 'rgb(100, 116, 139)' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tickFormatter={(value) => `${value}`}
+                tick={{ fontSize: 12, fill: 'rgb(100, 116, 139)' }}
+                axisLine={false}
+                tickLine={false}
+                width={40}
+              />
+              <Tooltip
+                formatter={(value, name) => [formatTooltipValue(value), name]}
+                labelClassName="text-xs font-semibold"
+                contentStyle={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(148, 163, 184, 0.25)',
+                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
 
-            <path d={actualFill} fill="url(#actualGradient)" />
-            <path
-              d={forecastLine}
-              stroke="#cbd5e1"
-              strokeWidth="2"
-              strokeDasharray="8 4"
-              fill="none"
-              vectorEffect="non-scaling-stroke"
-            />
-            <path
-              d={actualLine}
-              stroke="#136dec"
-              strokeWidth="2.5"
-              fill="none"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-
-          <div className="flex items-center justify-between px-2">
-            {points.map((point) => (
-              <span key={point.slug} className="text-xs font-bold text-base-content/40 uppercase">
-                {point.label}
-              </span>
-            ))}
-          </div>
+              <Line
+                type="monotone"
+                dataKey="actualUsage"
+                name="Actual"
+                stroke="#136dec"
+                strokeWidth={2.5}
+                dot={{ r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="forecastUsage"
+                name="Forecast"
+                stroke="#94a3b8"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                dot={{ r: 2, strokeWidth: 0 }}
+                activeDot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

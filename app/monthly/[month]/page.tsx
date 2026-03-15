@@ -1,6 +1,6 @@
 import MonthlyRecordsClient from "@/components/features/monthly/MonthlyRecordsClient";
 import { notFound } from 'next/navigation';
-import { getCustomMonthRecords } from '@/lib/server/customMonths';
+import { getCustomMonthRecords, getCustomUsageEntries } from '@/lib/server/customMonths';
 import { monthlyService } from '@/lib/services/monthlyService';
 
 // Adding searchParams makes this route dynamic and responsive to URL changes.
@@ -14,6 +14,7 @@ export default async function AppliancesPage({
   const resolvedParams = await params;
   const query = (await searchParams).q || "";
   monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+  monthlyService.syncUsageEntries(await getCustomUsageEntries());
   const record = monthlyService.getMonthlyRecordBySlug(resolvedParams.month);
 
   if (!record) {

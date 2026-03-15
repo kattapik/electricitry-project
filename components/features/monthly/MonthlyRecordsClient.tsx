@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import PageHeader from "@/components/layout/PageHeader";
 import URLSearchInput from "@/components/ui/URLSearchInput";
 import ApplianceListItem from "@/components/features/appliances/ApplianceListItem";
@@ -8,6 +9,7 @@ import MonthlyAddRecordDialog from '@/components/features/monthly/MonthlyAddReco
 import { Coins, AlertTriangle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatBaht, formatUsage, MonthlyRecord, SharedAppliance, sharedAppliances } from '@/lib/data/mockApp';
+import { updateMonthlyRateAction } from '@/lib/actions/monthly';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -17,8 +19,11 @@ interface Props {
 }
 
 export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [rate, setRate] = useState(record.rate.toFixed(2));
+  const [isRateSaving, setIsRateSaving] = useState(false);
+  const [rateError, setRateError] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const filteredRooms = useMemo(() => {
@@ -47,8 +52,25 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
       }));
   }, [record.rooms, searchQuery]);
 
+  const effectiveRate = Number(rate) > 0 ? Number(rate) : record.rate;
+
+  const roomsWithCalculatedCost = useMemo(() => {
+    return filteredRooms.map((room) => {
+      const appliances = room.appliances.map((appliance) => ({
+        ...appliance,
+        cost: Number((appliance.energyKwh * effectiveRate).toFixed(2)),
+      }));
+
+      return {
+        ...room,
+        appliances,
+        totalCost: Number(appliances.reduce((total, appliance) => total + appliance.cost, 0).toFixed(2)),
+      };
+    });
+  }, [effectiveRate, filteredRooms]);
+
   const filteredAppliances = useMemo<SharedAppliance[]>(() => {
-    return filteredRooms.flatMap((room) =>
+    return roomsWithCalculatedCost.flatMap((room) =>
       room.appliances.map((appliance) => ({
         id: appliance.id,
         name: appliance.name,
@@ -60,18 +82,55 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
         image: appliance.image,
       }))
     );
-  }, [filteredRooms]);
+  }, [roomsWithCalculatedCost]);
 
-  const effectiveRate = Number(rate) || record.rate;
-  const totalUsage = filteredRooms.reduce((total, room) => total + room.totalUsageKwh, 0);
+  const totalUsage = roomsWithCalculatedCost.reduce((total, room) => total + room.totalUsageKwh, 0);
   const estimatedCost = totalUsage * effectiveRate;
-  const peakUsage = filteredRooms.flatMap((room) => room.appliances).sort((left, right) => right.energyKwh - left.energyKwh)[0];
+  const peakUsage = roomsWithCalculatedCost
+    .flatMap((room) => room.appliances)
+    .sort((left, right) => right.energyKwh - left.energyKwh)[0];
 
   const totalPages = Math.ceil(filteredAppliances.length / ITEMS_PER_PAGE);
   const paginatedAppliances = filteredAppliances.slice(
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE
   );
+
+  const handleRateBlur = async () => {
+    const nextRate = Number(rate);
+
+    if (!Number.isFinite(nextRate) || nextRate <= 0) {
+      setRateError('Rate must be greater than 0');
+      setRate(record.rate.toFixed(2));
+      return;
+    }
+
+    const normalizedRate = Number(nextRate.toFixed(2));
+    setRate(normalizedRate.toFixed(2));
+
+    if (Math.abs(normalizedRate - record.rate) < 0.005) {
+      setRateError('');
+      return;
+    }
+
+    setIsRateSaving(true);
+    setRateError('');
+
+    const formData = new FormData();
+    formData.append('monthSlug', record.slug);
+    formData.append('rate', normalizedRate.toFixed(2));
+
+    const result = await updateMonthlyRateAction(formData);
+
+    if (!result.success) {
+      setRateError(result.error ?? 'Unable to update electricity rate');
+      setIsRateSaving(false);
+      return;
+    }
+
+    setIsRateSaving(false);
+    router.refresh();
+  };
 
   return (
     <>
@@ -92,16 +151,29 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
               <div className="flex items-center gap-2">
                 <div className="bg-base-200/50 rounded-lg flex-1 px-4 py-3 flex items-center gap-3">
                   <Coins size={16} className="text-base-content/40" />
-                  <input 
+                  <input
                     type="number"
+                    min="0.01"
                     step="0.01"
                     value={rate}
                     onChange={(e) => setRate(e.target.value)}
+                    onBlur={handleRateBlur}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        event.currentTarget.blur();
+                      }
+                    }}
                     className="bg-transparent border-none outline-none text-sm font-bold text-base-content w-full"
                   />
                 </div>
                 <span className="text-sm font-medium text-base-content/50">฿/kWh</span>
               </div>
+              <span
+                className={`text-xs mt-2 ${rateError ? 'text-error' : 'text-base-content/45'}`}
+              >
+                {isRateSaving ? 'Saving rate...' : rateError || '\u00a0'}
+              </span>
             </div>
           </div>
 
@@ -140,7 +212,7 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
       {/* Active Appliances Section */}
       <div className="w-full px-4 md:px-6 lg:px-8 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-          {filteredRooms.map((room) => (
+          {roomsWithCalculatedCost.map((room) => (
             <div key={room.roomId} className="card bg-base-100 shadow-sm border border-base-200">
               <div className="card-body p-4 gap-3">
                 <div className="flex items-start justify-between gap-3">

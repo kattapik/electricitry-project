@@ -1,10 +1,11 @@
 import PageHeader from "@/components/layout/PageHeader";
 import MonthlyFilters from "@/components/features/monthly/MonthlyFilters";
-import { getCustomMonthRecords } from '@/lib/server/customMonths';
+import { getCustomMonthRecords, getCustomUsageEntries } from '@/lib/server/customMonths';
 import { monthlyService } from '@/lib/services/monthlyService';
 
 export default async function MonthlyRecordsPage() {
   monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+  monthlyService.syncUsageEntries(await getCustomUsageEntries());
   const monthsData = monthlyService.getMonthlySummaries();
 
   return (

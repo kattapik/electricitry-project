@@ -1,4 +1,18 @@
-import { SharedAppliance, sharedAppliances } from "../data/appliances";
+import { SharedAppliance, sharedAppliances } from '../data/appliances';
+
+export interface GetAppliancesOptions {
+  query?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface GetAppliancesResult {
+  items: SharedAppliance[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
 
 // Mock Database (In-memory for now, replacing a real DB like Prisma)
 // In a real app, this would be a connection to your database.
@@ -6,17 +20,39 @@ const appliancesDb: SharedAppliance[] = sharedAppliances;
 
 export const applianceService = {
   /**
-   * Get all appliances, optionally filtered by a search query.
+   * Get appliances with search + pagination.
    */
-  async getAppliances(query?: string): Promise<SharedAppliance[]> {
-    if (!query) return [...appliancesDb];
+  async getAppliances(options: GetAppliancesOptions = {}): Promise<GetAppliancesResult> {
+    const query = options.query?.trim() || '';
+    const page =
+      typeof options.page === 'number' && Number.isFinite(options.page) && options.page > 0
+        ? Math.floor(options.page)
+        : 1;
+    const limit =
+      typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0
+        ? Math.floor(options.limit)
+        : 20;
 
-    const lowerQuery = query.toLowerCase();
-    return appliancesDb.filter(
-      (app) =>
-        app.name.toLowerCase().includes(lowerQuery) ||
-        (app.location?.toLowerCase() || "").includes(lowerQuery),
-    );
+    const filtered = !query
+      ? [...appliancesDb]
+      : appliancesDb.filter(
+          (app) =>
+            app.name.toLowerCase().includes(query.toLowerCase()) ||
+            (app.location?.toLowerCase() || '').includes(query.toLowerCase()),
+        );
+
+    const startIndex = (page - 1) * limit;
+    const items = filtered.slice(startIndex, startIndex + limit);
+    const total = filtered.length;
+    const hasMore = startIndex + items.length < total;
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      hasMore,
+    };
   },
 
   /**

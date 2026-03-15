@@ -1,7 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { appendCustomMonthRecord, getCustomMonthRecords } from '@/lib/server/customMonths';
+import {
+  appendCustomMonthRecord,
+  appendCustomUsageEntry,
+  getCustomMonthRecords,
+  getCustomUsageEntries,
+} from '@/lib/server/customMonths';
 import { monthlyService } from '../services/monthlyService';
 
 const VALID_MONTHS = [
@@ -30,6 +35,7 @@ export async function createMonthRecordAction(
     }
 
     monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+    monthlyService.syncUsageEntries(await getCustomUsageEntries());
     const record = monthlyService.createMonthRecord({ month, year, rate });
     await appendCustomMonthRecord({ month, year, rate });
 
@@ -73,13 +79,19 @@ export async function addMonthlyUsageEntryAction(
     }
 
     monthlyService.syncCreatedMonths(await getCustomMonthRecords());
-    const result = monthlyService.addMonthlyUsageEntry({
+    monthlyService.syncUsageEntries(await getCustomUsageEntries());
+
+    const usageEntry = {
+      id: crypto.randomUUID(),
       monthSlug,
       roomId,
       applianceId,
       usageHrs: getNumericField(formData, 'usageHrs'),
       energyKwh: getNumericField(formData, 'energyKwh'),
-    });
+    };
+
+    const result = monthlyService.applyUsageEntryEvent(usageEntry);
+    await appendCustomUsageEntry(usageEntry);
 
     revalidatePath('/');
     revalidatePath('/monthly');
@@ -95,6 +107,45 @@ export async function addMonthlyUsageEntryAction(
     return {
       success: false,
       error: normalizedError.message ?? 'Failed to add monthly usage entry',
+    };
+  }
+}
+
+export async function updateMonthlyRateAction(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const monthSlug = String(formData.get('monthSlug') ?? '').trim().toLowerCase();
+    const rate = Number(formData.get('rate'));
+
+    if (!monthSlug) {
+      return { success: false, error: 'Month is required' };
+    }
+
+    if (!Number.isFinite(rate) || rate <= 0) {
+      return { success: false, error: 'Electricity rate must be greater than 0' };
+    }
+
+    monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+    monthlyService.syncUsageEntries(await getCustomUsageEntries());
+    const updatedRecord = monthlyService.updateMonthlyRate(monthSlug, rate);
+    await appendCustomMonthRecord({
+      month: updatedRecord.month,
+      year: updatedRecord.year,
+      rate,
+    });
+
+    revalidatePath('/');
+    revalidatePath('/monthly');
+    revalidatePath(`/monthly/${monthSlug}`);
+
+    return { success: true };
+  } catch (error: unknown) {
+    const normalizedError = error as { message?: string };
+
+    return {
+      success: false,
+      error: normalizedError.message ?? 'Failed to update electricity rate',
     };
   }
 }
