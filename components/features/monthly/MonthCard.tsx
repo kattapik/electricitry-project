@@ -1,9 +1,8 @@
 'use client';
 
-import { ChevronRight, Plus, Zap, Coins, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ChevronRight, Zap, Coins, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
+import { useRouter } from 'next/navigation';
 
 type MonthCardProps = {
   slug: string;
@@ -16,7 +15,6 @@ type MonthCardProps = {
   roomCount?: number;
   applianceCount?: number;
   isLatest?: boolean;
-  onAdd?: (monthSlug: string, monthLabel: string) => void;
 };
 
 export default function MonthCard({
@@ -30,8 +28,9 @@ export default function MonthCard({
   roomCount,
   applianceCount,
   isLatest = false,
-  onAdd,
 }: MonthCardProps) {
+  const router = useRouter();
+
   const trendConfig = {
     positive: { color: "text-success", icon: TrendingDown },
     negative: { color: "text-error", icon: TrendingUp },
@@ -39,9 +38,23 @@ export default function MonthCard({
   };
 
   const { color: trendColor, icon: TrendIcon } = trendConfig[trendType];
+  const monthHref = `/monthly/${slug}`;
+  const openMonthDetails = () => router.push(monthHref);
 
   return (
-    <div className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow block outline-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30">
+    <div
+      className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow block outline-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onClick={openMonthDetails}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openMonthDetails();
+        }
+      }}
+      aria-label={`View details for ${month} ${year}`}
+    >
       <div className="card-body p-5 gap-4">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -59,33 +72,24 @@ export default function MonthCard({
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            {onAdd ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-lg border border-base-200 bg-base-100 text-base-content/60 hover:text-primary hover:bg-primary/5"
-                onClick={() => onAdd(slug, `${month} ${year}`)}
-              >
-                <Plus size={14} />
-                Add
-              </Button>
-            ) : null}
-            <div
+            <button
+              type="button"
               className={cn(
                 'btn btn-circle btn-sm',
-                isLatest ? 'btn-primary btn-soft' : 'btn-ghost text-base-content/30 pointer-events-none'
+                isLatest ? 'btn-primary btn-soft' : 'btn-ghost text-base-content/30'
               )}
-              aria-label={`View details for ${month}`}
+              aria-label={`Go to ${month} ${year}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                openMonthDetails();
+              }}
             >
               <ChevronRight size={16} />
-            </div>
+            </button>
           </div>
         </div>
 
-        <Link
-          href={`/monthly/${slug}`}
-          className="flex flex-col gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded-xl"
-        >
+        <div className="flex flex-col gap-4 rounded-xl">
           {/* Stats */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between bg-base-200/50 rounded-lg px-3 py-2.5">
@@ -117,7 +121,7 @@ export default function MonthCard({
             <TrendIcon size={12} />
             <span className="text-xs font-medium">{trendText}</span>
           </div>
-        </Link>
+        </div>
       </div>
     </div>
   );

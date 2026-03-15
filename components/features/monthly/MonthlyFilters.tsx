@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import MonthCard from '@/components/features/monthly/MonthCard';
-import MonthlyAddRecordDialog from '@/components/features/monthly/MonthlyAddRecordDialog';
 import MonthlyCreateMonthDialog from '@/components/features/monthly/MonthlyCreateMonthDialog';
 import SkeletonCard from '@/components/ui/SkeletonCard';
 import MonthRangePicker from '@/components/features/monthly/MonthRangePicker';
 import { Button } from '@/components/ui/Button';
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MonthlySummary, sharedAppliances } from '@/lib/data/mockApp';
+import { MonthlySummary } from '@/lib/data/mockApp';
 
 type MonthlyFiltersProps = {
   monthsData: MonthlySummary[];
@@ -21,7 +20,6 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
   const [startMonth, setStartMonth] = useState('');
   const [endMonth, setEndMonth] = useState('');
   const [sortBy, setSortBy] = useState('date-desc');
-  const [selectedMonth, setSelectedMonth] = useState<{ slug: string; label: string } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const getMonthNumber = (monthName: string) => {
@@ -130,7 +128,6 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
             <MonthCard
               key={`${data.month}-${data.year}`}
               {...data}
-              onAdd={(slug, label) => setSelectedMonth({ slug, label })}
             />
           ))
         ) : (
@@ -147,14 +144,6 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
           </>
         )}
       </div>
-
-      <MonthlyAddRecordDialog
-        isOpen={selectedMonth !== null}
-        onClose={() => setSelectedMonth(null)}
-        monthSlug={selectedMonth?.slug ?? ''}
-        monthLabel={selectedMonth?.label ?? ''}
-        appliances={sharedAppliances}
-      />
 
       <MonthlyCreateMonthDialog
         isOpen={isCreateOpen}
