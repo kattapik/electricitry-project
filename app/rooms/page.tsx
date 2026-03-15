@@ -7,18 +7,11 @@ import { Button } from "@/components/ui/Button";
 import Dialog from "@/components/features/shared/Dialog";
 import { Input } from "@/components/ui/Input";
 import SearchInput from "@/components/ui/SearchInput";
-
-// Initial mock data
-const initialRooms = [
-  { id: "1", name: "Living Room" },
-  { id: "2", name: "Kitchen" },
-  { id: "3", name: "Master Bedroom" },
-  { id: "4", name: "Laundry Room" },
-  { id: "5", name: "Home Office" },
-];
+import { formatBaht, formatUsage, Room } from '@/lib/data/mockApp';
+import { monthlyService } from '@/lib/services/monthlyService';
 
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState(initialRooms);
+  const [rooms, setRooms] = useState<Room[]>(monthlyService.getRoomsWithSummaries());
   const [search, setSearch] = useState("");
   
   // Dialog state
@@ -27,7 +20,7 @@ export default function RoomsPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
   // Form state
-  const [currentRoom, setCurrentRoom] = useState<{id: string, name: string} | null>(null);
+  const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
   const [roomNameInput, setRoomNameInput] = useState("");
 
   // Filtering
@@ -40,7 +33,15 @@ export default function RoomsPage() {
     e.preventDefault();
     if (!roomNameInput.trim()) return;
     
-    const newRoom = { id: Date.now().toString(), name: roomNameInput.trim() };
+    const newRoom: Room = {
+      id: Date.now().toString(),
+      name: roomNameInput.trim(),
+      summary: {
+        applianceCount: 0,
+        totalUsageKwh: 0,
+        monthlyCost: 0,
+      },
+    };
     setRooms([...rooms, newRoom]);
     setIsAddOpen(false);
     setRoomNameInput("");
@@ -65,13 +66,13 @@ export default function RoomsPage() {
     setCurrentRoom(null);
   };
 
-  const openEdit = (room: {id: string, name: string}) => {
+  const openEdit = (room: Room) => {
     setCurrentRoom(room);
     setRoomNameInput(room.name);
     setIsEditOpen(true);
   };
 
-  const openDelete = (room: {id: string, name: string}) => {
+  const openDelete = (room: Room) => {
     setCurrentRoom(room);
     setIsDeleteOpen(true);
   };
@@ -119,30 +120,36 @@ export default function RoomsPage() {
           <table className="table w-full">
             <thead className="bg-base-200/50 text-base-content/60 text-sm">
               <tr>
-                <th className="font-semibold px-6 py-4 rounded-tl-2xl">Room Name</th>
-                <th className="font-semibold px-6 py-4 w-24 rounded-tr-2xl text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRooms.length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="py-8 text-center text-base-content/50">
-                    No rooms found matching &quot;{search}&quot;
-                  </td>
-                </tr>
+                 <th className="font-semibold px-6 py-4 rounded-tl-2xl">Room Name</th>
+                 <th className="font-semibold px-6 py-4">Appliances</th>
+                 <th className="font-semibold px-6 py-4">Usage</th>
+                 <th className="font-semibold px-6 py-4">Monthly Cost</th>
+                 <th className="font-semibold px-6 py-4 w-24 rounded-tr-2xl text-right">Actions</th>
+               </tr>
+             </thead>
+             <tbody>
+               {filteredRooms.length === 0 ? (
+                 <tr>
+                   <td colSpan={5} className="py-8 text-center text-base-content/50">
+                     No rooms found matching &quot;{search}&quot;
+                   </td>
+                 </tr>
               ) : (
                 filteredRooms.map((room) => (
                   <tr key={room.id} className="hover:bg-base-200/30 transition-colors border-b border-base-200/50 last:border-0">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                     <td className="px-6 py-4">
+                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 text-primary p-2 rounded-lg">
                           <Box size={18} />
                         </div>
                         <span className="font-medium text-base-content">{room.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                       </div>
+                     </td>
+                     <td className="px-6 py-4 text-base-content/70 font-medium">{room.summary.applianceCount}</td>
+                     <td className="px-6 py-4 text-base-content/70 font-medium">{formatUsage(room.summary.totalUsageKwh)}</td>
+                     <td className="px-6 py-4 text-base-content font-semibold">{formatBaht(room.summary.monthlyCost)}</td>
+                     <td className="px-6 py-4 text-right">
+                       <div className="flex items-center justify-end gap-2">
                         <button 
                           onClick={() => openEdit(room)}
                           className="btn btn-ghost btn-sm btn-square text-base-content/60 hover:text-primary"
@@ -177,7 +184,12 @@ export default function RoomsPage() {
                   <div className="bg-primary/10 text-primary p-2 rounded-lg">
                     <Box size={18} />
                   </div>
-                  <span className="font-medium text-base-content">{room.name}</span>
+                  <div>
+                    <span className="font-medium text-base-content block">{room.name}</span>
+                    <span className="text-xs text-base-content/45">
+                      {room.summary.applianceCount} appliances · {formatBaht(room.summary.monthlyCost)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <button 

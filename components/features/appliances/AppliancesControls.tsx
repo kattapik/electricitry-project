@@ -7,21 +7,20 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import SearchableSelect, { SelectOption } from "@/components/ui/SearchableSelect";
 import { SharedAppliance } from "@/lib/data/appliances";
-
-const ROOM_OPTIONS: SelectOption[] = [
-  { value: "kitchen", label: "Kitchen" },
-  { value: "living_room", label: "Living Room" },
-  { value: "bedroom", label: "Master Bedroom" },
-  { value: "laundry", label: "Laundry Room" },
-];
+import { getRoomSelectOptions } from '@/lib/data/mockApp';
 
 // Convert SharedAppliance[] → SelectOption[] for the generic select
 function toApplianceOptions(appliances: SharedAppliance[]): SelectOption[] {
   return appliances.map(app => ({
     value: app.name,
     label: app.name,
-    image: app.image?.startsWith("http") || app.image?.startsWith("data:") ? app.image : undefined,
-    icon: <Cpu size={14} />,
+    image: app.image?.startsWith('http') || app.image?.startsWith('data:') ? app.image : undefined,
+    icon:
+      app.image && !(app.image.startsWith('http') || app.image.startsWith('data:')) ? (
+        <span>{app.image}</span>
+      ) : (
+        <Cpu size={14} />
+      ),
   }));
 }
 
@@ -33,6 +32,7 @@ export default function AppliancesControls({ appliances }: { appliances: SharedA
   const [room, setRoom] = useState("");
 
   const applianceOptions = toApplianceOptions(appliances);
+  const roomOptions = getRoomSelectOptions();
 
   const handleOpen = () => {
     setName("");
@@ -98,7 +98,7 @@ export default function AppliancesControls({ appliances }: { appliances: SharedA
           {/* Room picker — same component, no images */}
           <SearchableSelect
             label="Select Room"
-            options={ROOM_OPTIONS}
+            options={roomOptions}
             value={room}
             onChange={(opt) => setRoom(opt ? opt.value : "")}
             placeholder="Select a room..."

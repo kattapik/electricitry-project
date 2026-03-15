@@ -2,14 +2,14 @@ import { SharedAppliance, sharedAppliances } from "../data/appliances";
 
 // Mock Database (In-memory for now, replacing a real DB like Prisma)
 // In a real app, this would be a connection to your database.
-let appliancesDb: SharedAppliance[] = [...sharedAppliances];
+const appliancesDb: SharedAppliance[] = sharedAppliances;
 
 export const applianceService = {
   /**
    * Get all appliances, optionally filtered by a search query.
    */
   async getAppliances(query?: string): Promise<SharedAppliance[]> {
-    if (!query) return appliancesDb;
+    if (!query) return [...appliancesDb];
 
     const lowerQuery = query.toLowerCase();
     return appliancesDb.filter(
@@ -59,9 +59,13 @@ export const applianceService = {
    * Delete an appliance.
    */
   async deleteAppliance(id: string): Promise<boolean> {
-    const initialLength = appliancesDb.length;
-    appliancesDb = appliancesDb.filter((app) => app.id !== id);
+    const index = appliancesDb.findIndex((app) => app.id === id);
 
-    return appliancesDb.length < initialLength;
+    if (index === -1) {
+      return false;
+    }
+
+    appliancesDb.splice(index, 1);
+    return true;
   },
 };

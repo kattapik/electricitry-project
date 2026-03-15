@@ -3,8 +3,13 @@ import StatCard from "@/components/features/dashboard/StatCard";
 import TrendBadge from "@/components/ui/TrendBadge";
 import EnergyChart from "@/components/features/dashboard/EnergyChart";
 import ConsumerCard from "@/components/features/dashboard/ConsumerCard";
+import { getCustomMonthRecords } from '@/lib/server/customMonths';
+import { monthlyService } from '@/lib/services/monthlyService';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+  const dashboard = monthlyService.getDashboardSummary();
+
   return (
     <main className="p-4 md:p-6 lg:p-8 w-full max-w-5xl mx-auto flex flex-col min-h-full">
       {/* Header */}
@@ -24,18 +29,18 @@ export default function DashboardPage() {
         <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           <StatCard
             label="Total Monthly Consumption"
-            value="1,240"
+            value={dashboard.totalUsage.replace(' kWh', '')}
             suffix="kWh"
             badge={
-              <TrendBadge text="5.2% vs last month" trend="up" upIsGood={false} />
+              <TrendBadge text={dashboard.usageDeltaText} trend="down" upIsGood={true} />
             }
           />
           <StatCard
             label="Total Monthly Cost"
-            value="158.50"
+            value={dashboard.totalCost}
             prefix="฿"
             badge={
-              <TrendBadge text="2.1% lower than average" trend="down" upIsGood={false} />
+              <TrendBadge text={dashboard.costDeltaText} trend="down" upIsGood={true} />
             }
           />
         </div>
@@ -49,27 +54,16 @@ export default function DashboardPage() {
         <div className="mt-6 md:mt-8">
           <h2 className="text-lg font-bold text-base-content mb-4 md:mb-5">Top Energy Consumers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-            <ConsumerCard
-              name="Air Conditioner"
-              location="Master Bedroom"
-              percentage={42}
-              kwh="520.8 kWh"
-              emoji="❄️"
-            />
-            <ConsumerCard
-              name="Refrigerator"
-              location="Kitchen"
-              percentage={28}
-              kwh="347.2 kWh"
-              emoji="🧊"
-            />
-            <ConsumerCard
-              name="Washing Machine"
-              location="Laundry Room"
-              percentage={15}
-              kwh="186.0 kWh"
-              emoji="🫧"
-            />
+            {dashboard.topConsumers.map((consumer) => (
+              <ConsumerCard
+                key={`${consumer.name}-${consumer.location}`}
+                name={consumer.name}
+                location={consumer.location}
+                percentage={consumer.percentage}
+                kwh={consumer.kwh}
+                emoji={consumer.emoji}
+              />
+            ))}
           </div>
         </div>
       </main>
