@@ -1,47 +1,47 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, Calendar, ChevronRight, Box, PlugZap } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Box, Calendar, ChevronRight, LayoutDashboard, PlugZap } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
-const navItems = [
-  {
-    href: "/",
-    label: "Dashboard",
-    description: "Overview & insights",
-    icon: LayoutDashboard,
-  },
-  {
-    href: "/monthly",
-    label: "Monthly Records",
-    description: "Historical breakdown",
-    icon: Calendar,
-  },
-  {
-    href: "/appliances",
-    label: "Appliances",
-    description: "Manage appliance reference",
-    icon: PlugZap,
-  },
-
-  {
-    href: "/rooms",
-    label: "Rooms",
-    description: "Manage locations",
-    icon: Box, // Will use Box or something similar, need to import it
-  },
-];
+import { Link, usePathname } from '@/app/i18n/routing';
+import { cn } from '@/lib/utils';
 
 export default function SidebarNav() {
+  const t = useTranslations();
   const pathname = usePathname();
+  const navItems = [
+    {
+      href: '/',
+      label: t('nav.dashboard'),
+      description: t('nav.dashboardDescription'),
+      icon: LayoutDashboard,
+    },
+    {
+      href: '/monthly',
+      label: t('nav.monthly'),
+      description: t('nav.monthlyDescription'),
+      icon: Calendar,
+    },
+    {
+      href: '/appliances',
+      label: t('nav.appliances'),
+      description: t('nav.appliancesDescription'),
+      icon: PlugZap,
+    },
+    {
+      href: '/rooms',
+      label: t('nav.rooms'),
+      description: t('nav.roomsDescription'),
+      icon: Box,
+    },
+  ];
 
   return (
     <nav className="flex flex-col gap-1 px-3 flex-1 w-full">
       {/* Section label */}
       <div className="px-3 pt-2 pb-2">
         <span className="text-[10px] font-bold uppercase tracking-widest text-base-content/25">
-          Menu
+          {t('nav.menu')}
         </span>
       </div>
 

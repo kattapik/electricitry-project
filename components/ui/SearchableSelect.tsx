@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, ReactNode } from "react";
 import { Search, ChevronDown, Check } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 // Generic option type — any object with at least value + label
 export interface SelectOption {
@@ -27,11 +28,12 @@ export default function SearchableSelect({
   value,
   onChange,
   label,
-  placeholder = "Select an option...",
-  searchPlaceholder = "Search...",
-  emptyMessage = "No results found",
+  placeholder,
+  searchPlaceholder,
+  emptyMessage,
   showImages = false,
 }: SearchableSelectProps) {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +44,9 @@ export default function SearchableSelect({
   );
 
   const selected = options.find(opt => opt.value === value);
+  const effectivePlaceholder = placeholder ?? t('common.selectOption');
+  const effectiveSearchPlaceholder = searchPlaceholder ?? t('common.search');
+  const effectiveEmptyMessage = emptyMessage ?? t('common.noResultsFound');
 
   // Close on click outside
   const handleClickOutside = useCallback((e: MouseEvent) => {
@@ -115,7 +120,7 @@ export default function SearchableSelect({
               <span className="text-base-content font-medium text-sm truncate">{selected.label}</span>
             </div>
           ) : (
-            <span className="text-base-content/40 text-sm flex-1 text-left">{placeholder}</span>
+            <span className="text-base-content/40 text-sm flex-1 text-left">{effectivePlaceholder}</span>
           )}
           <ChevronDown
             size={16}
@@ -133,7 +138,7 @@ export default function SearchableSelect({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder={searchPlaceholder}
+                  placeholder={effectiveSearchPlaceholder}
                   className="input input-sm w-full bg-base-200/50 pl-9 focus:outline-none focus:bg-base-200/80 rounded-lg"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -145,7 +150,7 @@ export default function SearchableSelect({
             <ul className="py-1.5 px-1.5 max-h-56 overflow-y-auto">
               {filtered.length === 0 ? (
                 <li className="text-base-content/50 text-sm text-center py-4">
-                  {emptyMessage}
+                  {effectiveEmptyMessage}
                 </li>
               ) : (
                 filtered.map(opt => {

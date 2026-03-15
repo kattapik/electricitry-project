@@ -7,6 +7,7 @@ import SkeletonCard from '@/components/ui/SkeletonCard';
 import MonthRangePicker from '@/components/features/monthly/MonthRangePicker';
 import { Button } from '@/components/ui/Button';
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { MonthlySummary } from '@/lib/data/mockApp';
 
@@ -17,6 +18,7 @@ type MonthlyFiltersProps = {
 const MONTHS_LIST = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
+  const t = useTranslations();
   const [startMonth, setStartMonth] = useState('');
   const [endMonth, setEndMonth] = useState('');
   const [sortBy, setSortBy] = useState('date-desc');
@@ -82,14 +84,18 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
             leftIcon={<Plus size={14} />}
             onClick={() => setIsCreateOpen(true)}
           >
-            New Month
+            {t('monthly.newMonth')}
           </Button>
 
           <div className="join bg-base-200 rounded-xl p-1 overflow-x-auto">
             {(["date", "usage", "cost"] as const).map((type) => {
               const isActive = sortBy.startsWith(type);
               const isDesc = sortBy.endsWith("desc");
-              const labels = { date: "Latest", usage: "Usage", cost: "Cost" };
+              const labels = {
+                date: t('common.latest'),
+                usage: t('monthly.totalUsage'),
+                cost: t('monthly.monthlyCost'),
+              };
 
               return (
                 <button
@@ -132,8 +138,8 @@ export default function MonthlyFilters({ monthsData }: MonthlyFiltersProps) {
           ))
         ) : (
           <div className="col-span-full py-12 flex flex-col items-center justify-center text-base-content/40 card bg-base-100 border border-base-200 border-dashed">
-            <p className="text-base font-medium">No monthly records found</p>
-            <p className="text-sm">Try adjusting your filter</p>
+            <p className="text-base font-medium">{t('monthly.noMonthlyRecordsFound')}</p>
+            <p className="text-sm">{t('monthly.tryAdjustingFilter')}</p>
           </div>
         )}
 

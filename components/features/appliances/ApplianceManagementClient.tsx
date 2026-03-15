@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Cpu, Edit2, Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import Dialog from '@/components/features/shared/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +14,7 @@ import {
   editApplianceAction,
   getAppliancesPageAction,
 } from '@/lib/actions/appliances';
+import { localizeApplianceName } from '@/lib/i18n/localize';
 import type { SharedAppliance } from '@/lib/data/appliances';
 
 interface Props {
@@ -30,6 +32,7 @@ export default function ApplianceManagementClient({
   pageSize,
   searchQuery,
 }: Props) {
+  const t = useTranslations();
   const normalizedQuery = useMemo(() => searchQuery?.trim() || '', [searchQuery]);
 
   // Dialog state
@@ -73,7 +76,7 @@ export default function ApplianceManagementClient({
     });
 
     if (!result.success) {
-      setLoadMoreError(result.error ?? 'Failed to refresh appliance list.');
+      setLoadMoreError(result.error ?? t('appliances.failedToRefreshApplianceList'));
       setIsFetchingMore(false);
       return;
     }
@@ -83,7 +86,7 @@ export default function ApplianceManagementClient({
     setTotalItems(result.total);
     setPage(1);
     setIsFetchingMore(false);
-  }, [normalizedQuery, pageSize]);
+  }, [normalizedQuery, pageSize, t]);
 
   const loadNextPage = useCallback(async () => {
     if (isFetchingMore || !hasMore) {
@@ -101,7 +104,7 @@ export default function ApplianceManagementClient({
     });
 
     if (!result.success) {
-      setLoadMoreError(result.error ?? 'Failed to load more appliances.');
+      setLoadMoreError(result.error ?? t('appliances.failedToLoadMoreAppliances'));
       setIsFetchingMore(false);
       return;
     }
@@ -115,7 +118,7 @@ export default function ApplianceManagementClient({
     setTotalItems(result.total);
     setPage(nextPage);
     setIsFetchingMore(false);
-  }, [hasMore, isFetchingMore, normalizedQuery, page, pageSize]);
+  }, [hasMore, isFetchingMore, normalizedQuery, page, pageSize, t]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -153,7 +156,7 @@ export default function ApplianceManagementClient({
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be smaller than 2MB');
+      alert(t('appliances.imageMustBeSmallerThan2mb'));
       return;
     }
 
@@ -268,7 +271,7 @@ export default function ApplianceManagementClient({
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1 w-full sm:w-auto">
-          <URLSearchInput placeholder="Search appliances..." defaultValue={searchQuery} />
+          <URLSearchInput placeholder={t('appliances.searchAppliances')} defaultValue={searchQuery} />
         </div>
         <Button
           variant="primary"
@@ -281,7 +284,7 @@ export default function ApplianceManagementClient({
           }}
           className="w-full sm:w-auto"
         >
-          Add Appliance
+          {t('appliances.addAppliance')}
         </Button>
       </div>
 
@@ -290,15 +293,15 @@ export default function ApplianceManagementClient({
           <table className="table w-full">
             <thead className="bg-base-200/50 text-base-content/60 text-sm">
               <tr>
-                <th className="font-semibold px-6 py-4 rounded-tl-2xl">Appliance Name</th>
-                <th className="font-semibold px-6 py-4 w-24 rounded-tr-2xl text-right">Actions</th>
+                <th className="font-semibold px-6 py-4 rounded-tl-2xl">{t('appliances.applianceName')}</th>
+                <th className="font-semibold px-6 py-4 w-24 rounded-tr-2xl text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {hasNoResults ? (
                 <tr>
                   <td colSpan={2} className="py-8 text-center text-base-content/50">
-                    No appliances found matching &quot;{searchQuery || ''}&quot;
+                    {t('appliances.noAppliancesFoundMatching', { query: searchQuery || '' })}
                   </td>
                 </tr>
               ) : (
@@ -312,7 +315,7 @@ export default function ApplianceManagementClient({
                         <div className="bg-primary/10 text-primary size-10 flex items-center justify-center rounded-lg text-lg truncate overflow-hidden shrink-0">
                           {app.image ? (
                             app.image.startsWith('http') || app.image.startsWith('data:') ? (
-                              <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
+                              <img src={app.image} alt={localizeApplianceName(app.name, t)} className="w-full h-full object-cover" />
                             ) : (
                               app.image
                             )
@@ -320,7 +323,7 @@ export default function ApplianceManagementClient({
                             <Cpu size={18} />
                           )}
                         </div>
-                        <span className="font-medium text-base-content p-1">{app.name}</span>
+                        <span className="font-medium text-base-content p-1">{localizeApplianceName(app.name, t)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -349,7 +352,7 @@ export default function ApplianceManagementClient({
         <div className="md:hidden flex flex-col divide-y divide-base-200/50">
           {hasNoResults ? (
             <div className="py-8 text-center text-base-content/50">
-              No appliances found matching &quot;{searchQuery || ''}&quot;
+              {t('appliances.noAppliancesFoundMatching', { query: searchQuery || '' })}
             </div>
           ) : (
             appliances.map((app) => (
@@ -358,7 +361,7 @@ export default function ApplianceManagementClient({
                   <div className="bg-primary/10 text-primary size-10 flex items-center justify-center rounded-lg text-lg truncate overflow-hidden shrink-0">
                     {app.image ? (
                       app.image.startsWith('http') || app.image.startsWith('data:') ? (
-                        <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
+                        <img src={app.image} alt={localizeApplianceName(app.name, t)} className="w-full h-full object-cover" />
                       ) : (
                         app.image
                       )
@@ -366,7 +369,7 @@ export default function ApplianceManagementClient({
                       <Cpu size={18} />
                     )}
                   </div>
-                  <span className="font-medium text-base-content">{app.name}</span>
+                  <span className="font-medium text-base-content">{localizeApplianceName(app.name, t)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -389,7 +392,12 @@ export default function ApplianceManagementClient({
 
         <div className="border-t border-base-200/70 px-4 md:px-6 py-4 flex flex-col items-center gap-2 text-sm text-base-content/60">
           <div>
-            Showing {appliances.length} of {totalItems} appliances
+            {t('common.showingItems', {
+              from: appliances.length > 0 ? 1 : 0,
+              to: appliances.length,
+              total: totalItems,
+              item: t('appliances.appliances').toLowerCase(),
+            })}
           </div>
 
           <div ref={sentinelRef} className="w-full h-1" aria-hidden="true" />
@@ -397,12 +405,12 @@ export default function ApplianceManagementClient({
           {isFetchingMore && (
             <div className="flex items-center gap-2 text-base-content/70">
               <span className="loading loading-spinner loading-sm" />
-              <span>Loading more appliances...</span>
+              <span>{t('appliances.loadingMoreAppliances')}</span>
             </div>
           )}
 
           {!isFetchingMore && hasLoadedEverything && (
-            <p className="text-base-content/50">No more items.</p>
+            <p className="text-base-content/50">{t('common.noMoreItems')}</p>
           )}
 
           {!isFetchingMore && loadMoreError && (
@@ -414,12 +422,12 @@ export default function ApplianceManagementClient({
       <Dialog
         isOpen={isAddOpen}
         onClose={() => !isPendingAction && setIsAddOpen(false)}
-        title="Add Appliance"
+        title={t('appliances.addAppliance')}
       >
         <form onSubmit={handleAddSubmit} className="flex flex-col gap-4 p-6 pt-4">
           <Input
-            label="Appliance Name"
-            placeholder="e.g. Air Conditioner"
+            label={t('appliances.applianceName')}
+            placeholder={t('appliances.applianceNamePlaceholder')}
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             required
@@ -427,12 +435,12 @@ export default function ApplianceManagementClient({
             disabled={isPendingAction}
           />
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold text-base-content/70">Image (Optional)</span>
+            <span className="text-sm font-semibold text-base-content/70">{t('common.imageOptional')}</span>
             <div className="flex items-center gap-4 mt-1">
               <div className="bg-primary/10 text-primary w-16 h-16 flex items-center justify-center rounded-xl text-3xl overflow-hidden shrink-0 border border-base-200">
                 {imageInput ? (
                   imageInput.startsWith('http') || imageInput.startsWith('data:') ? (
-                    <img src={imageInput} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={imageInput} alt={t('common.preview')} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-xl">{imageInput}</span>
                   )
@@ -448,7 +456,7 @@ export default function ApplianceManagementClient({
                   disabled={isPendingAction}
                   className="file-input file-input-bordered file-input-sm w-full bg-base-200/50"
                 />
-                <p className="text-xs text-base-content/40">Accepts images up to 2MB</p>
+                <p className="text-xs text-base-content/40">{t('common.acceptsImagesUpTo2mb')}</p>
               </div>
             </div>
           </div>
@@ -459,10 +467,10 @@ export default function ApplianceManagementClient({
               onClick={() => setIsAddOpen(false)}
               disabled={isPendingAction}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" variant="primary" disabled={!nameInput.trim() || isPendingAction}>
-              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : 'Add Appliance'}
+              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : t('appliances.addAppliance')}
             </Button>
           </div>
         </form>
@@ -471,12 +479,12 @@ export default function ApplianceManagementClient({
       <Dialog
         isOpen={isEditOpen}
         onClose={() => !isPendingAction && setIsEditOpen(false)}
-        title="Edit Appliance"
+        title={t('appliances.editAppliance')}
       >
         <form onSubmit={handleEditSubmit} className="flex flex-col gap-4 p-6 pt-4">
           <Input
-            label="Appliance Name"
-            placeholder="e.g. Air Conditioner"
+            label={t('appliances.applianceName')}
+            placeholder={t('appliances.applianceNamePlaceholder')}
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             required
@@ -484,12 +492,12 @@ export default function ApplianceManagementClient({
             disabled={isPendingAction}
           />
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold text-base-content/70">Image (Optional)</span>
+            <span className="text-sm font-semibold text-base-content/70">{t('common.imageOptional')}</span>
             <div className="flex items-center gap-4 mt-1">
               <div className="bg-primary/10 text-primary w-16 h-16 flex items-center justify-center rounded-xl text-3xl overflow-hidden shrink-0 border border-base-200">
                 {imageInput ? (
                   imageInput.startsWith('http') || imageInput.startsWith('data:') ? (
-                    <img src={imageInput} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={imageInput} alt={t('common.preview')} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-xl">{imageInput}</span>
                   )
@@ -505,7 +513,7 @@ export default function ApplianceManagementClient({
                   disabled={isPendingAction}
                   className="file-input file-input-bordered file-input-sm w-full bg-base-200/50"
                 />
-                <p className="text-xs text-base-content/40">Accepts images up to 2MB</p>
+                <p className="text-xs text-base-content/40">{t('common.acceptsImagesUpTo2mb')}</p>
               </div>
             </div>
           </div>
@@ -516,14 +524,14 @@ export default function ApplianceManagementClient({
               onClick={() => setIsEditOpen(false)}
               disabled={isPendingAction}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" variant="primary" disabled={!nameInput.trim() || isPendingAction}>
               {isPendingAction ? (
                 <span className="loading loading-spinner loading-xs"></span>
               ) : (
-                'Save Changes'
-              )}
+                  t('common.saveChanges')
+                )}
             </Button>
           </div>
         </form>
@@ -532,13 +540,13 @@ export default function ApplianceManagementClient({
       <Dialog
         isOpen={isDeleteOpen}
         onClose={() => !isPendingAction && setIsDeleteOpen(false)}
-        title="Delete Appliance"
+        title={t('appliances.deleteAppliance')}
       >
         <div className="flex flex-col gap-4 p-6 pt-4">
           <p className="text-base-content/80 text-sm">
-            Are you sure you want to delete{' '}
-            <span className="font-bold text-base-content">{currentAppliance?.name}</span>? This action cannot
-            be undone.
+            {t('appliances.deleteApplianceConfirm', {
+              name: currentAppliance ? localizeApplianceName(currentAppliance.name, t) : '',
+            })}
           </p>
           <div className="flex justify-end gap-2 mt-4">
             <Button
@@ -547,7 +555,7 @@ export default function ApplianceManagementClient({
               onClick={() => setIsDeleteOpen(false)}
               disabled={isPendingAction}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -555,7 +563,7 @@ export default function ApplianceManagementClient({
               onClick={handleDeleteSubmit}
               disabled={isPendingAction}
             >
-              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : 'Delete'}
+              {isPendingAction ? <span className="loading loading-spinner loading-xs"></span> : t('common.delete')}
             </Button>
           </div>
         </div>

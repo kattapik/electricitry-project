@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { Plus, Cpu } from "lucide-react";
+import { useTranslations } from 'next-intl';
+
 import Dialog from "@/components/features/shared/Dialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import SearchableSelect, { SelectOption } from "@/components/ui/SearchableSelect";
 import { SharedAppliance } from "@/lib/data/appliances";
 import { getRoomSelectOptions } from '@/lib/data/mockApp';
+import { localizeApplianceName, localizeRoomName } from '@/lib/i18n/localize';
 
 // Convert SharedAppliance[] → SelectOption[] for the generic select
 function toApplianceOptions(appliances: SharedAppliance[]): SelectOption[] {
@@ -25,14 +28,21 @@ function toApplianceOptions(appliances: SharedAppliance[]): SelectOption[] {
 }
 
 export default function AppliancesControls({ appliances }: { appliances: SharedAppliance[] }) {
+  const t = useTranslations();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [usage, setUsage] = useState("");
   const [consumption, setConsumption] = useState("");
   const [room, setRoom] = useState("");
 
-  const applianceOptions = toApplianceOptions(appliances);
-  const roomOptions = getRoomSelectOptions();
+  const applianceOptions = toApplianceOptions(appliances).map((option) => ({
+    ...option,
+    label: localizeApplianceName(option.label, t),
+  }));
+  const roomOptions = getRoomSelectOptions().map((option) => ({
+    ...option,
+    label: localizeRoomName(option.label, t),
+  }));
 
   const handleOpen = () => {
     setName("");
@@ -55,40 +65,40 @@ export default function AppliancesControls({ appliances }: { appliances: SharedA
         size="md"
         leftIcon={<Plus size={14} />}
       >
-        Add Device
+        {t('appliances.addDevice')}
       </Button>
 
       <Dialog
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
-        title="Add New Appliance"
+        title={t('appliances.addNewAppliance')}
       >
         <div className="flex flex-col gap-5 p-6 border-b border-base-200 overflow-visible">
           {/* Appliance picker */}
           <SearchableSelect
-            label="Appliance"
+            label={t('monthly.appliance')}
             options={applianceOptions}
             value={name}
             onChange={(opt) => setName(opt ? opt.value : "")}
-            placeholder="Select an appliance..."
-            searchPlaceholder="Search appliances..."
-            emptyMessage="No appliances found"
+            placeholder={t('monthly.selectAppliance')}
+            searchPlaceholder={t('appliances.searchAppliances')}
+            emptyMessage={t('appliances.noAppliancesFound')}
             showImages
           />
 
           <div className="flex gap-4">
             <Input
-              label="Daily Usage (hrs)"
+              label={t('appliances.dailyUsageHours')}
               type="number"
-              placeholder="e.g., 24"
+              placeholder={t('appliances.dailyUsagePlaceholder')}
               className="flex-1"
               value={usage}
               onChange={(e) => setUsage(e.target.value)}
             />
             <Input
-              label="Consumption (kWh)"
+              label={t('appliances.consumptionKwh')}
               type="number"
-              placeholder="e.g., 1.2"
+              placeholder={t('appliances.consumptionPlaceholder')}
               className="flex-1"
               value={consumption}
               onChange={(e) => setConsumption(e.target.value)}
@@ -97,13 +107,13 @@ export default function AppliancesControls({ appliances }: { appliances: SharedA
 
           {/* Room picker — same component, no images */}
           <SearchableSelect
-            label="Select Room"
+            label={t('monthly.selectRoom')}
             options={roomOptions}
             value={room}
             onChange={(opt) => setRoom(opt ? opt.value : "")}
-            placeholder="Select a room..."
-            searchPlaceholder="Search rooms..."
-            emptyMessage="No rooms found"
+            placeholder={t('monthly.selectRoom')}
+            searchPlaceholder={t('rooms.searchRooms')}
+            emptyMessage={t('rooms.noRoomsFound')}
           />
         </div>
 
@@ -113,7 +123,7 @@ export default function AppliancesControls({ appliances }: { appliances: SharedA
             onClick={() => setIsAddOpen(false)}
             className="flex-1 rounded-xl h-11"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -121,7 +131,7 @@ export default function AppliancesControls({ appliances }: { appliances: SharedA
             className="flex-1 rounded-xl h-11"
             disabled={!name || !room}
           >
-            Add Appliance
+            {t('appliances.addAppliance')}
           </Button>
         </div>
       </Dialog>

@@ -1,10 +1,14 @@
 "use client";
 
-import { Menu } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
-import SidebarNav from "./SidebarNav";
+import { Menu } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
+import SidebarNav from './SidebarNav';
 
 export default function Topbar() {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -44,10 +48,13 @@ export default function Topbar() {
           </div>
         </div>
         <div className="flex-none">
+          <div className="mr-2 inline-flex">
+            <LanguageSwitcher />
+          </div>
           <button
             onClick={() => setIsOpen(true)}
             className="btn btn-ghost btn-sm btn-square"
-            aria-label="Open menu"
+            aria-label={t('common.openMenu')}
           >
             <Menu size={22} />
           </button>
@@ -80,7 +87,7 @@ export default function Topbar() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-base-content text-lg font-bold leading-tight">EnergySync</span>
-                  <span className="text-base-content/50 text-xs">Smart Home Monitor</span>
+                  <span className="text-base-content/50 text-xs">{t('layout.smartHomeMonitor')}</span>
                 </div>
               </div>
             </div>

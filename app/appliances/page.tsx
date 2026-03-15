@@ -1,5 +1,6 @@
 import ApplianceManagementClient from '@/components/features/appliances/ApplianceManagementClient';
 import PageHeader from '@/components/layout/PageHeader';
+import { getTranslations } from 'next-intl/server';
 import { applianceService } from '@/lib/services/applianceService';
 
 const APPLIANCE_PAGE_SIZE = 20;
@@ -11,6 +12,7 @@ export default async function ApplianceManagementPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  const t = await getTranslations();
   const query = (await searchParams).q || '';
 
   // Fetch from our "Database"
@@ -25,8 +27,8 @@ export default async function ApplianceManagementPage({
       {/* Header section */}
       <div className="w-full pt-4 md:pt-6 lg:pt-8 px-4 md:px-6 lg:px-8 flex flex-col gap-5 md:gap-6">
         <PageHeader
-          title="Appliance Management"
-          subtitle="Manage reference details for your appliances"
+          title={t('appliances.title')}
+          subtitle={t('appliances.subtitle')}
           actions={null}
         />
       </div>

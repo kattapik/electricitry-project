@@ -3,10 +3,13 @@ import StatCard from "@/components/features/dashboard/StatCard";
 import TrendBadge from "@/components/ui/TrendBadge";
 import EnergyChart from "@/components/features/dashboard/EnergyChart";
 import ConsumerCard from "@/components/features/dashboard/ConsumerCard";
+import { getTranslations } from 'next-intl/server';
 import { getCustomMonthRecords, getCustomUsageEntries } from '@/lib/server/customMonths';
+import { localizeApplianceName, localizeDashboardDeltaText, localizeRoomName } from '@/lib/i18n/localize';
 import { monthlyService } from '@/lib/services/monthlyService';
 
 export default async function DashboardPage() {
+  const t = await getTranslations();
   monthlyService.syncCreatedMonths(await getCustomMonthRecords());
   monthlyService.syncUsageEntries(await getCustomUsageEntries());
   const dashboard = monthlyService.getDashboardSummary();
@@ -16,12 +19,12 @@ export default async function DashboardPage() {
     <main className="p-4 md:p-6 lg:p-8 w-full max-w-5xl mx-auto flex flex-col min-h-full">
       {/* Header */}
         <PageHeader
-          title="Energy Dashboard"
+          title={t('dashboard.title')}
           actions={
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end hidden sm:flex">
-                <span className="text-sm font-medium text-base-content">Monday, Oct 24</span>
-                <span className="text-xs text-base-content/50 uppercase">Viewing Real-time Data</span>
+                <span className="text-sm font-medium text-base-content">{t('dashboard.todayLabel')}</span>
+                <span className="text-xs text-base-content/50 uppercase">{t('dashboard.realTimeData')}</span>
               </div>
             </div>
           }
@@ -30,19 +33,19 @@ export default async function DashboardPage() {
         {/* Summary Cards */}
         <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           <StatCard
-            label="Total Monthly Consumption"
+            label={t('dashboard.totalMonthlyConsumption')}
             value={dashboard.totalUsage.replace(' kWh', '')}
-            suffix="kWh"
+            suffix={t('units.kWh')}
             badge={
-              <TrendBadge text={dashboard.usageDeltaText} trend="down" upIsGood={true} />
+              <TrendBadge text={localizeDashboardDeltaText(dashboard.usageDeltaText, t)} trend="down" upIsGood={true} />
             }
           />
           <StatCard
-            label="Total Monthly Cost"
+            label={t('dashboard.totalMonthlyCost')}
             value={dashboard.totalCost}
             prefix="฿"
             badge={
-              <TrendBadge text={dashboard.costDeltaText} trend="down" upIsGood={true} />
+              <TrendBadge text={localizeDashboardDeltaText(dashboard.costDeltaText, t)} trend="down" upIsGood={true} />
             }
           />
         </div>
@@ -54,13 +57,13 @@ export default async function DashboardPage() {
 
         {/* Top Energy Consumers */}
         <div className="mt-6 md:mt-8">
-          <h2 className="text-lg font-bold text-base-content mb-4 md:mb-5">Top Energy Consumers</h2>
+          <h2 className="text-lg font-bold text-base-content mb-4 md:mb-5">{t('dashboard.topEnergyConsumers')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             {dashboard.topConsumers.map((consumer) => (
               <ConsumerCard
                 key={`${consumer.name}-${consumer.location}`}
-                name={consumer.name}
-                location={consumer.location}
+                name={localizeApplianceName(consumer.name, t)}
+                location={localizeRoomName(consumer.location, t)}
                 percentage={consumer.percentage}
                 kwh={consumer.kwh}
                 imageUrl={consumer.imageUrl}

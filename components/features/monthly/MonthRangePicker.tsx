@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useTranslations } from 'next-intl';
+
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -11,25 +13,52 @@ interface MonthRangePickerProps {
   onChange: (start: string, end: string) => void;
 }
 
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
-
 const FULL_MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June", 
   "July", "August", "September", "October", "November", "December"
 ];
 
-function formatDisplayDate(dateStr: string) {
+const SHORT_MONTH_KEYS = [
+  'monthsShort.jan',
+  'monthsShort.feb',
+  'monthsShort.mar',
+  'monthsShort.apr',
+  'monthsShort.may',
+  'monthsShort.jun',
+  'monthsShort.jul',
+  'monthsShort.aug',
+  'monthsShort.sep',
+  'monthsShort.oct',
+  'monthsShort.nov',
+  'monthsShort.dec',
+] as const;
+
+function formatDisplayDate(dateStr: string, t: (key: string) => string): string {
   if (!dateStr || !dateStr.includes("-")) return "";
   const [year, monthStr] = dateStr.split("-");
   const monthIdx = parseInt(monthStr, 10) - 1;
   if (isNaN(monthIdx) || monthIdx < 0 || monthIdx > 11) return "";
-  return `${FULL_MONTH_NAMES[monthIdx]} ${year}`;
+  const monthName = FULL_MONTH_NAMES[monthIdx];
+  const monthKeys = [
+    'months.january',
+    'months.february',
+    'months.march',
+    'months.april',
+    'months.may',
+    'months.june',
+    'months.july',
+    'months.august',
+    'months.september',
+    'months.october',
+    'months.november',
+    'months.december',
+  ];
+  const translatedMonth = t(monthKeys[monthIdx]);
+  return `${translatedMonth || monthName} ${year}`;
 }
 
 export default function MonthRangePicker({ startMonth, endMonth, onChange }: MonthRangePickerProps) {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   
@@ -113,12 +142,12 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
   };
 
   // Determine button text
-  let buttonText = "Filter by date range";
+  let buttonText = t('monthly.filterByDateRange');
   if (startMonth && endMonth) {
     if (startMonth === endMonth) {
-      buttonText = formatDisplayDate(startMonth);
+      buttonText = formatDisplayDate(startMonth, t);
     } else {
-      buttonText = `${formatDisplayDate(startMonth)} - ${formatDisplayDate(endMonth)}`;
+      buttonText = `${formatDisplayDate(startMonth, t)} - ${formatDisplayDate(endMonth, t)}`;
     }
   }
 
@@ -180,9 +209,10 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
           {/* Month Grid */}
           <div className="p-4">
             <div className="grid grid-cols-3 gap-2">
-              {MONTH_NAMES.map((month, idx) => {
+              {SHORT_MONTH_KEYS.map((monthKey, idx) => {
                 const isSelected = isMonthSelected(idx);
                 const inRange = isMonthInRange(idx);
+                const month = t(monthKey);
                 
                 return (
                   <button
@@ -208,7 +238,7 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
           {/* Footer */}
           <div className="flex items-center justify-between p-4 border-t border-base-200 bg-base-100">
             <p className="text-xs text-base-content/50 font-medium">
-              {selectionStep === "start" ? "Select Start Month" : "Select End Month"}
+              {selectionStep === "start" ? t('monthly.selectStartMonth') : t('monthly.selectEndMonth')}
             </p>
             <div className="flex items-center justify-end gap-2">
               <Button 
@@ -217,7 +247,7 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
                 onClick={() => setIsOpen(false)}
                 className="font-bold text-base-content/60 h-8"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button 
                 variant="primary"
@@ -225,7 +255,7 @@ export default function MonthRangePicker({ startMonth, endMonth, onChange }: Mon
                 onClick={handleApply}
                 className="font-bold h-8 px-4"
               >
-                Apply
+                {t('common.apply')}
               </Button>
             </div>
           </div>

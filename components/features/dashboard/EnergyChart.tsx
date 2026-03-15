@@ -10,6 +10,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useTranslations } from 'next-intl';
+
 import type { DashboardChartPoint } from '@/lib/services/monthlyService';
 
 interface EnergyChartProps {
@@ -50,12 +52,14 @@ function formatTooltipValue(value: number | string | ReadonlyArray<number | stri
 }
 
 export default function EnergyChart({ points }: EnergyChartProps) {
+  const t = useTranslations();
+
   if (points.length === 0) {
     return (
       <div className="card bg-base-100 shadow-sm border border-base-200 w-full overflow-hidden">
         <div className="card-body p-5 md:p-6 gap-2">
-          <h3 className="text-lg font-bold text-base-content">Forecast vs. Actual</h3>
-          <p className="text-sm text-base-content/50">No monthly records available for charting yet.</p>
+          <h3 className="text-lg font-bold text-base-content">{t('dashboard.actualVsForecast')}</h3>
+          <p className="text-sm text-base-content/50">{t('dashboard.noChartData')}</p>
         </div>
       </div>
     );
@@ -66,8 +70,8 @@ export default function EnergyChart({ points }: EnergyChartProps) {
       <div className="card-body p-5 md:p-6 gap-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-0">
           <div>
-            <h3 className="text-lg font-bold text-base-content">Forecast vs. Actual</h3>
-            <p className="text-sm text-base-content/50">Real consumption trend from monthly records</p>
+              <h3 className="text-lg font-bold text-base-content">{t('dashboard.actualVsForecast')}</h3>
+              <p className="text-sm text-base-content/50">{t('dashboard.realConsumptionTrend')}</p>
           </div>
         </div>
 
@@ -102,7 +106,7 @@ export default function EnergyChart({ points }: EnergyChartProps) {
               <Line
                 type="monotone"
                 dataKey="actualUsage"
-                name="Actual"
+                name={t('dashboard.actual')}
                 stroke="#136dec"
                 strokeWidth={2.5}
                 dot={{ r: 3, strokeWidth: 0 }}
@@ -111,7 +115,7 @@ export default function EnergyChart({ points }: EnergyChartProps) {
               <Line
                 type="monotone"
                 dataKey="forecastUsage"
-                name="Forecast"
+                name={t('dashboard.forecast')}
                 stroke="#94a3b8"
                 strokeWidth={2}
                 strokeDasharray="6 4"

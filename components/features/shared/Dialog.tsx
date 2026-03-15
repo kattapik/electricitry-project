@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, ReactNode } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from 'next-intl';
+
 import { Button } from "@/components/ui/Button";
 
 type DialogProps = {
@@ -12,6 +14,7 @@ type DialogProps = {
 };
 
 export default function Dialog({ isOpen, onClose, title, children }: DialogProps) {
+  const t = useTranslations();
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const onCloseRef = useRef(onClose);
@@ -106,7 +109,7 @@ export default function Dialog({ isOpen, onClose, title, children }: DialogProps
             size="sm"
             onClick={onClose}
             className="size-8 p-0 text-base-content/40 hover:text-base-content/60 focus:ring-offset-2"
-            aria-label="Close dialog"
+            aria-label={t('common.closeDialog')}
           >
             <X size={18} />
           </Button>

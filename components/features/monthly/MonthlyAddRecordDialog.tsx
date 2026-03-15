@@ -3,11 +3,14 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import Dialog from '@/components/features/shared/Dialog';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { addMonthlyUsageEntryAction } from '@/lib/actions/monthly';
+import { localizeApplianceName, localizeRoomName } from '@/lib/i18n/localize';
 import { getRoomSelectOptions, SharedAppliance } from '@/lib/data/mockApp';
 
 interface MonthlyAddRecordDialogProps {
@@ -25,6 +28,7 @@ export default function MonthlyAddRecordDialog({
   monthLabel,
   appliances,
 }: MonthlyAddRecordDialogProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [roomId, setRoomId] = useState('');
   const [applianceId, setApplianceId] = useState('');
@@ -34,12 +38,21 @@ export default function MonthlyAddRecordDialog({
   const [notice, setNotice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const roomOptions = useMemo(() => getRoomSelectOptions(), []);
+  const roomOptions = useMemo(
+    () =>
+      getRoomSelectOptions().map((option) => ({
+        ...option,
+        label: localizeRoomName(option.label, t),
+      })),
+    [t]
+  );
   const applianceOptions = useMemo(
     () =>
       appliances.map((appliance) => ({
         value: appliance.id,
-        label: appliance.model ? `${appliance.name} · ${appliance.model}` : appliance.name,
+        label: appliance.model
+          ? `${localizeApplianceName(appliance.name, t)} · ${appliance.model}`
+          : localizeApplianceName(appliance.name, t),
         image:
           appliance.image.startsWith('http') || appliance.image.startsWith('data:')
             ? appliance.image
@@ -51,7 +64,7 @@ export default function MonthlyAddRecordDialog({
             <span>{appliance.image}</span>
           ),
       })),
-    [appliances]
+    [appliances, t]
   );
 
   const resetState = () => {
@@ -88,15 +101,15 @@ export default function MonthlyAddRecordDialog({
     const result = await addMonthlyUsageEntryAction(formData);
 
     if (!result.success) {
-      setError(result.error ?? 'Unable to add usage record');
+      setError(result.error ?? t('monthly.unableToAddUsageRecord'));
       setIsSubmitting(false);
       return;
     }
 
     setNotice(
       result.merged
-        ? 'Existing appliance entry in this month was merged instead of duplicated.'
-        : 'Monthly usage entry added successfully.'
+        ? t('monthly.existingEntryMerged')
+        : t('monthly.monthlyUsageAddedSuccessfully')
     );
     setIsSubmitting(false);
     router.refresh();
@@ -107,54 +120,54 @@ export default function MonthlyAddRecordDialog({
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={handleClose} title={`Add ${monthLabel} Record`}>
+    <Dialog isOpen={isOpen} onClose={handleClose} title={t('monthly.addMonthRecordTitle', { month: monthLabel })}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6 pt-4">
-        <Input label="Month" value={monthLabel} disabled />
+        <Input label={t('monthly.month')} value={monthLabel} disabled />
 
         <SearchableSelect
-          label="Room"
+          label={t('monthly.room')}
           options={roomOptions}
           value={roomId}
           onChange={(option) => setRoomId(option?.value ?? '')}
-          placeholder="Select a room..."
-          searchPlaceholder="Search rooms..."
-          emptyMessage="No rooms found"
+          placeholder={t('monthly.selectRoom')}
+          searchPlaceholder={t('rooms.searchRooms')}
+          emptyMessage={t('rooms.noRoomsFound')}
         />
 
         <SearchableSelect
-          label="Appliance"
+          label={t('monthly.appliance')}
           options={applianceOptions}
           value={applianceId}
           onChange={(option) => setApplianceId(option?.value ?? '')}
-          placeholder="Select an appliance..."
-          searchPlaceholder="Search appliances..."
-          emptyMessage="No appliances found"
+          placeholder={t('monthly.selectAppliance')}
+          searchPlaceholder={t('appliances.searchAppliances')}
+          emptyMessage={t('appliances.noAppliancesFound')}
           showImages
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
-            label="Usage Hours"
+            label={t('monthly.usageHours')}
             type="number"
             min="0.1"
             step="0.1"
-            placeholder="e.g. 24"
+            placeholder={t('monthly.usageHoursPlaceholder')}
             value={usageHrs}
             onChange={(event) => setUsageHrs(event.target.value)}
           />
           <Input
-            label="Energy kWh"
+            label={t('monthly.energyKwh')}
             type="number"
             min="0.1"
             step="0.1"
-            placeholder="e.g. 12.5"
+            placeholder={t('monthly.energyKwhPlaceholder')}
             value={energyKwh}
             onChange={(event) => setEnergyKwh(event.target.value)}
           />
         </div>
 
         <div className="rounded-xl border border-base-200 bg-base-200/30 px-4 py-3 text-xs text-base-content/55">
-          Duplicate handling: if this month already has the same appliance in the same room, the new values will be merged into that row instead of creating a duplicate entry.
+          {t('monthly.duplicateHandlingNote')}
         </div>
 
         {error ? <p className="text-sm text-error">{error}</p> : null}
@@ -162,7 +175,7 @@ export default function MonthlyAddRecordDialog({
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -170,7 +183,7 @@ export default function MonthlyAddRecordDialog({
             isLoading={isSubmitting}
             disabled={!roomId || !applianceId || !usageHrs || !energyKwh}
           >
-            Add Record
+            {t('monthly.addRecord')}
           </Button>
         </div>
       </form>

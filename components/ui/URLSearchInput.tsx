@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition, useState, useEffect } from "react";
+import { useTranslations } from 'next-intl';
 
 export default function URLSearchInput({
   placeholder = "Search...",
@@ -11,6 +12,7 @@ export default function URLSearchInput({
   placeholder?: string;
   defaultValue?: string;
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -54,7 +56,10 @@ export default function URLSearchInput({
       />
       {isPending && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-           <span className="loading loading-spinner loading-xs text-base-content/30 mix-blend-multiply"></span>
+           <span
+             className="loading loading-spinner loading-xs text-base-content/30 mix-blend-multiply"
+             aria-label={t('common.loading')}
+           ></span>
         </div>
       )}
     </div>
