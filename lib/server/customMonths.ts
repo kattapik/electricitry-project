@@ -2,6 +2,12 @@ import { cookies } from 'next/headers';
 import type { CreateMonthRecordInput } from '@/lib/services/monthlyService';
 
 const CUSTOM_MONTHS_COOKIE = 'custom-month-records';
+const CUSTOM_MONTHS_COOKIE_VERSION = 3;
+
+interface CustomMonthsCookiePayload {
+  version: number;
+  records: CreateMonthRecordInput[];
+}
 
 function isValidMonthRecord(value: unknown): value is CreateMonthRecordInput {
   if (!value || typeof value !== 'object') {
@@ -30,11 +36,21 @@ export async function getCustomMonthRecords(): Promise<CreateMonthRecordInput[]>
   try {
     const parsed = JSON.parse(rawValue) as unknown;
 
-    if (!Array.isArray(parsed)) {
+    if (Array.isArray(parsed)) {
       return [];
     }
 
-    return parsed.filter(isValidMonthRecord);
+    if (!parsed || typeof parsed !== 'object') {
+      return [];
+    }
+
+    const payload = parsed as Partial<CustomMonthsCookiePayload>;
+
+    if (payload.version !== CUSTOM_MONTHS_COOKIE_VERSION || !Array.isArray(payload.records)) {
+      return [];
+    }
+
+    return payload.records.filter(isValidMonthRecord);
   } catch {
     return [];
   }
@@ -55,7 +71,12 @@ export async function appendCustomMonthRecord(input: CreateMonthRecordInput): Pr
     nextRecords.push(input);
   }
 
-  cookieStore.set(CUSTOM_MONTHS_COOKIE, JSON.stringify(nextRecords), {
+  const payload: CustomMonthsCookiePayload = {
+    version: CUSTOM_MONTHS_COOKIE_VERSION,
+    records: nextRecords,
+  };
+
+  cookieStore.set(CUSTOM_MONTHS_COOKIE, JSON.stringify(payload), {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',

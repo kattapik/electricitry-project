@@ -9,6 +9,7 @@ import { monthlyService } from '@/lib/services/monthlyService';
 export default async function DashboardPage() {
   monthlyService.syncCreatedMonths(await getCustomMonthRecords());
   const dashboard = monthlyService.getDashboardSummary();
+  const chartPoints = monthlyService.getDashboardChartData();
 
   return (
     <main className="p-4 md:p-6 lg:p-8 w-full max-w-5xl mx-auto flex flex-col min-h-full">
@@ -47,7 +48,7 @@ export default async function DashboardPage() {
 
         {/* Chart */}
         <div className="mt-6 md:mt-8">
-          <EnergyChart />
+          <EnergyChart points={chartPoints} />
         </div>
 
         {/* Top Energy Consumers */}

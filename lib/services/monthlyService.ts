@@ -18,8 +18,19 @@ export interface CreateMonthRecordInput {
   rate: number;
 }
 
+export interface DashboardChartPoint {
+  slug: string;
+  label: string;
+  actualUsage: number;
+  forecastUsage: number;
+}
+
 function parseFormattedValue(value: string): number {
   return Number(value.replace(/[^0-9.]+/g, ''));
+}
+
+function formatChartLabel(month: string, year: string): string {
+  return `${month.slice(0, 3).toUpperCase()} ${year.slice(-2)}`;
 }
 
 const monthlyRecordsDb: MonthlyRecord[] = getInitialMonthlyRecords();
@@ -50,6 +61,13 @@ function toMonthlySummary(record: MonthlyRecord): MonthlySummary {
 }
 
 function buildTrendText(currentUsage: number, previousUsage: number) {
+  if (previousUsage <= 0) {
+    return {
+      trendText: 'No baseline data yet',
+      trendType: 'neutral' as const,
+    };
+  }
+
   const delta = ((currentUsage - previousUsage) / previousUsage) * 100;
   const absoluteDelta = Math.abs(delta).toFixed(1);
 
@@ -107,14 +125,8 @@ function recalculateRecord(record: MonthlyRecord): MonthlyRecord {
   };
 }
 
-function getLatestRecord(): MonthlyRecord {
-  const latestRecord = monthlyRecordsDb[0];
-
-  if (!latestRecord) {
-    throw new Error('No monthly records available');
-  }
-
-  return latestRecord;
+function getLatestRecord(): MonthlyRecord | undefined {
+  return monthlyRecordsDb[0];
 }
 
 function getOrCreateRoom(record: MonthlyRecord, roomId: string): MonthlyRoomBreakdown {
@@ -145,12 +157,18 @@ function getOrCreateRoom(record: MonthlyRecord, roomId: string): MonthlyRoomBrea
 
 export const monthlyService = {
   syncCreatedMonths(records: CreateMonthRecordInput[]): void {
+    if (records.length === 0) {
+      return;
+    }
+
+    const existingSlugs = new Set(monthlyRecordsDb.map((record) => record.slug));
+
     records.forEach((record) => {
       const slug = `${record.month.toLowerCase()}-${record.year}`;
-      const existingRecord = monthlyRecordsDb.find((item) => item.slug === slug);
 
-      if (!existingRecord) {
+      if (!existingSlugs.has(slug)) {
         this.createMonthRecord(record);
+        existingSlugs.add(slug);
       }
     });
   },
@@ -167,6 +185,17 @@ export const monthlyService = {
   getRoomsWithSummaries(): Room[] {
     const baseRooms = getRooms();
     const latestRecord = getLatestRecord();
+
+    if (!latestRecord) {
+      return baseRooms.map((room) => ({
+        ...room,
+        summary: {
+          applianceCount: 0,
+          totalUsageKwh: 0,
+          monthlyCost: 0,
+        },
+      }));
+    }
 
     return baseRooms.map((room) => {
       const monthlyRoom = latestRecord.rooms.find((item) => item.roomId === room.id);
@@ -195,10 +224,28 @@ export const monthlyService = {
 
   getDashboardSummary() {
     const latestRecord = getLatestRecord();
+    if (!latestRecord) {
+      return {
+        totalUsage: formatUsage(0),
+        totalCost: '0.00',
+        usageDeltaText: '0.0% vs last month',
+        costDeltaText: '0.0% lower than last month',
+        topConsumers: [] as Array<{
+          name: string;
+          location: string;
+          percentage: number;
+          kwh: string;
+          emoji: string;
+        }>,
+      };
+    }
+
     const latestUsageValue = Number(latestRecord.totalUsage.replace(/[^0-9.]+/g, ''));
     const latestCostValue = Number(latestRecord.monthlyCost.replace(/[^0-9.]+/g, ''));
-    const costDelta = ((latestRecord.previousCost - latestCostValue) / latestRecord.previousCost) * 100;
-    const usageDelta = ((latestRecord.previousUsage - latestUsageValue) / latestRecord.previousUsage) * 100;
+    const costBase = latestRecord.previousCost > 0 ? latestRecord.previousCost : 1;
+    const usageBase = latestRecord.previousUsage > 0 ? latestRecord.previousUsage : 1;
+    const costDelta = ((latestRecord.previousCost - latestCostValue) / costBase) * 100;
+    const usageDelta = ((latestRecord.previousUsage - latestUsageValue) / usageBase) * 100;
     const topConsumers = [...latestRecord.rooms]
       .flatMap((room) => room.appliances)
       .sort((left, right) => right.energyKwh - left.energyKwh)
@@ -212,11 +259,23 @@ export const monthlyService = {
       topConsumers: topConsumers.map((appliance) => ({
         name: appliance.name,
         location: appliance.roomName,
-        percentage: Math.round((appliance.energyKwh / latestUsageValue) * 100),
+        percentage: latestUsageValue > 0 ? Math.round((appliance.energyKwh / latestUsageValue) * 100) : 0,
         kwh: formatUsage(appliance.energyKwh),
         emoji: appliance.image.startsWith('http') ? '🔌' : appliance.image,
       })),
     };
+  },
+
+  getDashboardChartData(limit = 6): DashboardChartPoint[] {
+    const effectiveLimit = Math.max(1, Math.floor(limit));
+    const recentRecords = monthlyRecordsDb.slice(0, effectiveLimit).reverse();
+
+    return recentRecords.map((record) => ({
+      slug: record.slug,
+      label: formatChartLabel(record.month, record.year),
+      actualUsage: parseFormattedValue(record.totalUsage),
+      forecastUsage: Number(record.previousUsage.toFixed(1)),
+    }));
   },
 
   createMonthRecord(input: CreateMonthRecordInput): MonthlyRecord {
