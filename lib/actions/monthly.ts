@@ -149,3 +149,73 @@ export async function updateMonthlyRateAction(
     };
   }
 }
+
+export async function updateMonthlyUsageEntryAction(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const monthSlug = String(formData.get('monthSlug') ?? '').trim().toLowerCase();
+    const entryId = String(formData.get('entryId') ?? '').trim();
+    const usageHrs = Number(formData.get('usageHrs'));
+    const energyKwh = Number(formData.get('energyKwh'));
+
+    if (!monthSlug || !entryId) {
+      return { success: false, error: 'Month and entry ID are required' };
+    }
+
+    if (!Number.isFinite(usageHrs) || usageHrs < 0) {
+      return { success: false, error: 'Usage hours must be 0 or greater' };
+    }
+
+    if (!Number.isFinite(energyKwh) || energyKwh <= 0) {
+      return { success: false, error: 'Energy consumption must be greater than 0' };
+    }
+
+    monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+    monthlyService.syncUsageEntries(await getCustomUsageEntries());
+    monthlyService.updateMonthlyUsageEntry(monthSlug, entryId, { usageHrs, energyKwh });
+
+    revalidatePath('/');
+    revalidatePath('/monthly');
+    revalidatePath(`/monthly/${monthSlug}`);
+
+    return { success: true };
+  } catch (error: unknown) {
+    const normalizedError = error as { message?: string };
+
+    return {
+      success: false,
+      error: normalizedError.message ?? 'Failed to update usage entry',
+    };
+  }
+}
+
+export async function deleteMonthlyUsageEntryAction(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const monthSlug = String(formData.get('monthSlug') ?? '').trim().toLowerCase();
+    const entryId = String(formData.get('entryId') ?? '').trim();
+
+    if (!monthSlug || !entryId) {
+      return { success: false, error: 'Month and entry ID are required' };
+    }
+
+    monthlyService.syncCreatedMonths(await getCustomMonthRecords());
+    monthlyService.syncUsageEntries(await getCustomUsageEntries());
+    monthlyService.deleteMonthlyUsageEntry(monthSlug, entryId);
+
+    revalidatePath('/');
+    revalidatePath('/monthly');
+    revalidatePath(`/monthly/${monthSlug}`);
+
+    return { success: true };
+  } catch (error: unknown) {
+    const normalizedError = error as { message?: string };
+
+    return {
+      success: false,
+      error: normalizedError.message ?? 'Failed to delete usage entry',
+    };
+  }
+}

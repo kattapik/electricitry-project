@@ -6,9 +6,10 @@ import { localizeApplianceName, localizeRoomName } from '@/lib/i18n/localize';
 
 interface ApplianceListItemProps {
   appliance: SharedAppliance;
+  onEdit?: () => void;
 }
 
-export default function ApplianceListItem({ appliance }: ApplianceListItemProps) {
+export default function ApplianceListItem({ appliance, onEdit }: ApplianceListItemProps) {
   const t = useTranslations();
 
   return (
@@ -33,7 +34,12 @@ export default function ApplianceListItem({ appliance }: ApplianceListItemProps)
         
         {/* Mobile: Edit Button shown top right */}
         <div className="flex items-start md:hidden shrink-0 ml-2">
-           <Button variant="ghost" size="sm" className="text-primary h-8 px-3 rounded-lg bg-primary/5 hover:bg-primary/10">
+           <Button
+             variant="ghost"
+             size="sm"
+             className="text-primary h-8 px-3 rounded-lg bg-primary/5 hover:bg-primary/10"
+             onClick={onEdit}
+           >
              {t('common.edit')}
             </Button>
          </div>
@@ -69,7 +75,12 @@ export default function ApplianceListItem({ appliance }: ApplianceListItemProps)
 
       {/* 5. Edit Button (Desktop only, mobile shows in header) */}
       <td className="hidden md:table-cell text-right px-4 py-3 align-middle">
-        <Button variant="ghost" size="sm" className="text-base-content/50 h-8 px-4 font-bold hover:text-primary hover:bg-primary/5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-base-content/50 h-8 px-4 font-bold hover:text-primary hover:bg-primary/5"
+          onClick={onEdit}
+        >
           {t('common.edit')}
         </Button>
       </td>

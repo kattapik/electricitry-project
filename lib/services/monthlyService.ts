@@ -472,4 +472,73 @@ export const monthlyService = {
       merged,
     };
   },
+
+  updateMonthlyUsageEntry(
+    monthSlug: string,
+    entryId: string,
+    input: { usageHrs: number; energyKwh: number }
+  ): MonthlyRecord {
+    const recordIndex = monthlyRecordsDb.findIndex(
+      (item) => item.slug === monthSlug.toLowerCase()
+    );
+
+    if (recordIndex < 0) {
+      throw new Error('Target month was not found');
+    }
+
+    const record = monthlyRecordsDb[recordIndex];
+    let entryFound = false;
+
+    for (const room of record.rooms) {
+      const entryIndex = room.appliances.findIndex(
+        (entry) => entry.id === entryId
+      );
+      if (entryIndex >= 0) {
+        const entry = room.appliances[entryIndex];
+        entry.usageHrs = input.usageHrs;
+        entry.energyKwh = Number(input.energyKwh.toFixed(1));
+        entry.cost = Number((input.energyKwh * record.rate).toFixed(2));
+        entryFound = true;
+        break;
+      }
+    }
+
+    if (!entryFound) {
+      throw new Error('Usage entry not found');
+    }
+
+    monthlyRecordsDb[recordIndex] = recalculateRecord(record);
+    return cloneRecord(monthlyRecordsDb[recordIndex]);
+  },
+
+  deleteMonthlyUsageEntry(monthSlug: string, entryId: string): MonthlyRecord {
+    const recordIndex = monthlyRecordsDb.findIndex(
+      (item) => item.slug === monthSlug.toLowerCase()
+    );
+
+    if (recordIndex < 0) {
+      throw new Error('Target month was not found');
+    }
+
+    const record = monthlyRecordsDb[recordIndex];
+    let entryFound = false;
+
+    for (const room of record.rooms) {
+      const entryIndex = room.appliances.findIndex(
+        (entry) => entry.id === entryId
+      );
+      if (entryIndex >= 0) {
+        room.appliances.splice(entryIndex, 1);
+        entryFound = true;
+        break;
+      }
+    }
+
+    if (!entryFound) {
+      throw new Error('Usage entry not found');
+    }
+
+    monthlyRecordsDb[recordIndex] = recalculateRecord(record);
+    return cloneRecord(monthlyRecordsDb[recordIndex]);
+  },
 };

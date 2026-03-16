@@ -418,7 +418,7 @@ function buildGeneratedAppliances(totalItems: number): SharedAppliance[] {
   return generated;
 }
 
-const sharedAppliances: SharedAppliance[] = [...baseSharedAppliances, ...buildGeneratedAppliances(240)];
+const sharedAppliances: SharedAppliance[] = [...baseSharedAppliances, ...buildGeneratedAppliances(2)];
 
 // Realistic Thai electricity rates (PEA/MEA style with seasonal variation)
 const RATES = {

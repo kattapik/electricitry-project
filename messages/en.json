@@ -47,7 +47,8 @@
     "noBaselineData": "No baseline data yet",
     "higher": "higher",
     "lower": "lower",
-    "percentComparedPreviousMonth": "{value}% {direction} than previous month"
+    "percentComparedPreviousMonth": "{value}% {direction} than previous month",
+    "confirmDelete": "Confirm Delete"
   },
   "dashboard": {
     "title": "Energy Dashboard",
@@ -120,7 +121,12 @@
     "noAppliancesFoundForMonth": "No appliances found for this month.",
     "rateMustBeGreaterThanZero": "Rate must be greater than 0",
     "unableToUpdateRate": "Unable to update electricity rate",
-    "noDataYetForMonth": "No data yet for this month"
+    "noDataYetForMonth": "No data yet for this month",
+    "editUsageRecord": "Edit Usage Record",
+    "unableToUpdateUsageRecord": "Unable to update usage record",
+    "unableToDeleteUsageRecord": "Unable to delete usage record",
+    "confirmDeleteUsageRecord": "Delete this record?",
+    "deleteUsageRecordWarning": "This action cannot be undone."
   },
   "appliances": {
     "title": "Appliance Management",

@@ -47,7 +47,8 @@
     "noBaselineData": "ยังไม่มีข้อมูลฐานเปรียบเทียบ",
     "higher": "สูงกว่า",
     "lower": "ต่ำกว่า",
-    "percentComparedPreviousMonth": "{value}% {direction} เดือนก่อนหน้า"
+    "percentComparedPreviousMonth": "{value}% {direction} เดือนก่อนหน้า",
+    "confirmDelete": "ยืนยันการลบ"
   },
   "dashboard": {
     "title": "แดชบอร์ดพลังงาน",
@@ -120,7 +121,12 @@
     "noAppliancesFoundForMonth": "ไม่พบเครื่องใช้ไฟฟ้าสำหรับเดือนนี้",
     "rateMustBeGreaterThanZero": "อัตราต้องมากกว่า 0",
     "unableToUpdateRate": "ไม่สามารถอัปเดตอัตราค่าไฟฟ้าได้",
-    "noDataYetForMonth": "ยังไม่มีข้อมูลของเดือนนี้"
+    "noDataYetForMonth": "ยังไม่มีข้อมูลของเดือนนี้",
+    "editUsageRecord": "แก้ไขข้อมูลการใช้งาน",
+    "unableToUpdateUsageRecord": "ไม่สามารถอัปเดตข้อมูลการใช้งานได้",
+    "unableToDeleteUsageRecord": "ไม่สามารถลบข้อมูลการใช้งานได้",
+    "confirmDeleteUsageRecord": "ลบรายการนี้?",
+    "deleteUsageRecordWarning": "การดำเนินการนี้ไม่สามารถย้อนกลับได้"
   },
   "appliances": {
     "title": "จัดการเครื่องใช้ไฟฟ้า",

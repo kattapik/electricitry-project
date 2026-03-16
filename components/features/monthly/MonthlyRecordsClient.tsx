@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { formatBaht, formatUsage, MonthlyRecord, SharedAppliance, sharedAppliances } from '@/lib/data/mockApp';
 import { localizeApplianceName, localizeMonthName, localizeRoomName, localizeTrendText } from '@/lib/i18n/localize';
 import { updateMonthlyRateAction } from '@/lib/actions/monthly';
+import MonthlyEditRecordDialog from '@/components/features/monthly/MonthlyEditRecordDialog';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -28,6 +29,8 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
   const [isRateSaving, setIsRateSaving] = useState(false);
   const [rateError, setRateError] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingAppliance, setEditingAppliance] = useState<SharedAppliance | null>(null);
 
   const filteredRooms = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -76,16 +79,16 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
     return roomsWithCalculatedCost.flatMap((room) =>
       room.appliances.map((appliance) => ({
         id: appliance.id,
-        name: localizeApplianceName(appliance.name, t),
+        name: appliance.name,
         model: appliance.model,
-        location: localizeRoomName(room.roomName, t),
+        location: room.roomName,
         usageHrs: String(appliance.usageHrs),
         energyKwh: appliance.energyKwh.toFixed(1),
         cost: appliance.cost.toFixed(2),
         image: appliance.image,
       }))
     );
-  }, [roomsWithCalculatedCost, t]);
+  }, [roomsWithCalculatedCost]);
 
   const totalUsage = roomsWithCalculatedCost.reduce((total, room) => total + room.totalUsageKwh, 0);
   const estimatedCost = totalUsage * effectiveRate;
@@ -284,8 +287,19 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
                   </td>
                 </tr>
               ) : (
-                paginatedAppliances.map((appliance, index) => (
-                  <ApplianceListItem key={index} appliance={appliance} />
+                paginatedAppliances.map((appliance) => (
+                  <ApplianceListItem
+                    key={appliance.id}
+                    appliance={{
+                      ...appliance,
+                      name: localizeApplianceName(appliance.name, t),
+                      location: appliance.location ? localizeRoomName(appliance.location, t) : undefined,
+                    }}
+                    onEdit={() => {
+                      setEditingAppliance(appliance);
+                      setIsEditOpen(true);
+                    }}
+                  />
                 ))
               )}
             </tbody>
@@ -328,6 +342,18 @@ export default function MonthlyRecordsClient({ searchQuery, record }: Props) {
           monthSlug={record.slug}
           monthLabel={`${localizedMonth} ${record.year}`}
           appliances={sharedAppliances}
+        />
+
+        <MonthlyEditRecordDialog
+          key={editingAppliance?.id ?? 'empty'}
+          isOpen={isEditOpen}
+          onClose={() => {
+            setIsEditOpen(false);
+            setEditingAppliance(null);
+          }}
+          monthSlug={record.slug}
+          monthLabel={`${localizedMonth} ${record.year}`}
+          entry={editingAppliance}
         />
       </div>
     </>
